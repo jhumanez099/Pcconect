@@ -62,3 +62,20 @@ create table recogidas(
     foreign key ("id_cliente") references clientes ("id_cliente"),
     foreign key ("id_usuario") references usuarios ("id_usuario")
 );
+
+
+
+INSERT INTO clientes (id_tipo_cliente, nombre_empresa, nombre_representante_empresa, telefono, correo, ubicaciones)
+VALUES (1, 'Empresa XYZ', 'Juan Pérez', '123456789', 'juan.perez@xyz.com', 'Calle Mayor 123');
+
+INSERT INTO productos (nombre_producto, valor_actual, caracteristicas_producto)
+VALUES ('Producto A', 100.00, 'Descripción del producto A');
+
+INSERT INTO usuarios (nombres_usuario, apellidos_usuario, correo_usuario, telefono)
+VALUES ('Ana García', 'García López', 'ana.garcia@gmail.com', '987654321');
+
+INSERT INTO pedidos (id_producto, id_cliente, id_usuario, fecha_pedido, hora_pedido, cantidad_pedido)
+VALUES (1, 1, 1, '2023-11-14', '10:00:00', 1);
+
+INSERT INTO recogidas (id_producto, id_cliente, id_usuario, fecha_recogida, hora_recogida, cantidad_recogida, motivo, observaciones)
+VALUES (1, 1, 1, '2023-11-15', '12:00:00', 1, 'Recogida en tienda', 'El cliente ha recogido el producto en la tienda');
