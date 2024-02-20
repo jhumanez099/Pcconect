@@ -1,5 +1,9 @@
 create database pcconect;
 
+-- \c pcconect para ingresar a la base de datos creada --
+-- \d 'nombre de la tabla' para buscar una tabla --
+-- \dt para mostar todas las tablas --
+
 create table tipo_clientes(
     id_tipo_cliente serial primary key,
     clase_cliente varchar(255)
