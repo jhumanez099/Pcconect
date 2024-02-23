@@ -1,11 +1,25 @@
-const app = require('./app.js')
+const express = require('express')
+const morgan = require('morgan')
+const cors = require('cors')
+const cookieParser = require('cookie-parser')
 
-const pool = require('./db')
+const app = express()
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}))
+app.use(morgan('dev'))
+app.use(express.json())
+app.use(cookieParser())
 
-const getPedidos = () => {
-  pool.query('SELECT * FROM Pedidos')
-}
+const clients_routes = require('./routes/client.routes')
 
-getPedidos()
-app.listen(3000)
-console.log('Server on port', 3000)
+
+app.use(clients_routes)
+
+app.listen(3000, () =>{
+  console.log('El servidor esta escuchando en el puerto: ', 'http://localhost:3000/')
+})
+
+
+
