@@ -1,6 +1,6 @@
 const Router = require('express')
 const router = Router()
-const {getClients} = require('../controllers/client.controllers.js')
+const {getClients} = require('../controllers/clients.controllers.js')
 
 router.get('/getClients', getClients)
 

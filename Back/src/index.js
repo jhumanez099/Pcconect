@@ -12,7 +12,7 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(cookieParser())
 
-const clients_routes = require('./routes/client.routes')
+const clients_routes = require('./routes/clients.routes')
 
 
 app.use(clients_routes)
