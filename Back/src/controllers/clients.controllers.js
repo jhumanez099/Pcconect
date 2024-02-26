@@ -11,7 +11,7 @@ const getClients = async (req, res ) => {
         }
       })
     }) 
-    console.log('Clientes consultado correctamente')
+    console.log('Clientes consultados correctamente')
     res.json(result.rows)
   } catch (error) {
     console.log(error)
@@ -52,6 +52,9 @@ const getOnlyClients = async (req, res) => {
         }
       })
     })
+    if (result.rowCount === 0) return res.status(404).json({
+      message: "Cliente no encontrado",
+    })
     console.log('Cliente consultada con éxito');
     res.json(result.rows);
   } catch (error) {
@@ -72,6 +75,9 @@ const updateClients = async (req, res) =>{
           resolve(result)
         }
       })
+    })
+    if (result.rowCount === 0) return res.status(404).json({
+      message: "Cliente no encontrado",
     })
     console.log('Cliente actualizado con éxito', result.rows);
     res.status(200).json({ message: 'Cliente actualizado con éxito' });

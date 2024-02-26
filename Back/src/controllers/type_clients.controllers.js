@@ -11,7 +11,7 @@ const getTypeClients = async (req, res) => {
         }
       })
     })
-    console.log('Tipos de clientes consultado correctamente')
+    console.log('Tipos de clientes consultados correctamente')
     res.json(result.rows)
   } catch (error) {
     console.log(error)
@@ -40,7 +40,7 @@ const createTypeClients = async (req, res) => {
   }
 }
 
-const getOnlyTypeClients = async (req, res) => {
+const getOnlyTypeClient = async (req, res) => {
   const { clase_cliente } = req.params
   try {
     const result = await new Promise((resolve, reject) => {
@@ -51,6 +51,9 @@ const getOnlyTypeClients = async (req, res) => {
           resolve(result)
         }
       })
+    })
+    if (result.rowCount === 0) return res.status(404).json({
+      message: "Tipo cliente no encontrado",
     })
     console.log('Tipo de cliente consultada con éxito');
     res.json(result.rows);
@@ -73,6 +76,9 @@ const updateTypeClients = async (req, res) => {
         }
       })
     })
+    if (result.rowCount === 0) return res.status(404).json({
+      message: "Tipo cliente no encontrado",
+    })
     console.log('Tipo de cliente actualizado con éxito', result.rows);
     res.status(200).json({ message: 'Tipo de cliente actualizado con éxito' });
   } catch (error) {
@@ -93,6 +99,9 @@ const deleteTypeClients = async (req, res) => {
         }
       })
     })
+    if (result.rowCount === 0) return res.status(404).json({
+      message: "Tipo cliente no encontrado",
+    })
     console.log('Tipo de cliente eliminado con éxito');
     res.json({ message: 'Tipo de cliente eliminado con éxito' });
   } catch (error) {
@@ -101,4 +110,4 @@ const deleteTypeClients = async (req, res) => {
   }
 }
 
-module.exports = { getTypeClients, createTypeClients, getOnlyTypeClients, updateTypeClients, deleteTypeClients }
+module.exports = { getTypeClients, createTypeClients, getOnlyTypeClient, updateTypeClients, deleteTypeClients }
