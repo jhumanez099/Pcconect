@@ -1,13 +1,12 @@
-#root {
-    max-width: 1280px;
-    margin: 4000;
-    padding: 2rem;
-    text-align: center;
-    position: relative;
-    top: -150px; 
-    font-size: 40px;
-    margin-left: 500px;
-    font-size: 1.1em;
-  }
+body{
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  color: ligth;
+}
 
-
+div{
+  background-color: rgb(93, 173, 226);
+  border-radius: 5%;
+}

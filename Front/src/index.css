@@ -5,7 +5,7 @@
     
     
   
-    color-scheme: light dark;
+    color-scheme: light;
     color: rgba(255, 255, 255, 0.87);
     background-color: #d1e3e8;
     font-weight: 5000;
@@ -97,7 +97,7 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  background-color: #256fbd;
+  background-color: rgb(52, 152, 219);
   min-width: 320px;
   min-height: 100vh;
 }
