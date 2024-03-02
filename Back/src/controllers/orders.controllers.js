@@ -3,7 +3,7 @@ const pool = require('../db.js')
 const getOrders = async (req, res) => {
   try {
     const result = await new Promise((resolve, reject) => {
-      pool.query('SELECT p.id_pedido, c.nombre_empresa, pr.nombre_producto, u.nombres_usuario, u.apellidos_usuario, p.fecha_pedido, p.hora_pedido, p.cantidad_pedido FROM pedidos p, clientes c, productos pr, usuarios u WHERE c.id_cliente = p.id_cliente AND pr.id_producto = p.id_producto AND u.id_usuario = p.id_usuario', (err, result) => {
+      pool.query('SELECT * FROM pedidos p, clientes c, productos pr, usuarios u WHERE c.id_cliente = p.id_cliente AND pr.id_producto = p.id_producto AND u.id_usuario = p.id_usuario', (err, result) => {
         if (err) {
           reject(err)
         } else {
@@ -20,11 +20,11 @@ const getOrders = async (req, res) => {
 }
 
 const createOrders = async (req, res) => {
-  const { id_producto, id_cliente, id_usuario, fecha_pedido, hora_pedido, cantidad_pedido } = req.body
+  const { id_producto, id_cliente, id_usuario, fecha_pedido, hora_pedido } = req.body
 
   try {
     const result = await new Promise((resolve, reject) => {
-      pool.query('INSERT INTO pedidos (id_producto, id_cliente, id_usuario, fecha_pedido, hora_pedido, cantidad_pedido) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [id_producto, id_cliente, id_usuario, fecha_pedido, hora_pedido, cantidad_pedido], (err, result) => {
+      pool.query('INSERT INTO pedidos (id_producto, id_cliente, id_usuario, fecha_pedido, hora_pedido) VALUES ($1, $2, $3, $4, $5) RETURNING *', [id_producto, id_cliente, id_usuario, fecha_pedido, hora_pedido], (err, result) => {
         if (err) {
           reject(err)
         } else {
@@ -33,10 +33,11 @@ const createOrders = async (req, res) => {
       })
     })
     console.log('Pedido creado con exito')
-    res.status(200).json({ message: 'El producto se creo con éxito' });
+    res.status(200).json({ message: 'El pedido se creo con éxito' });
+    
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Error al crear el producto' });
+    res.status(500).json({ message: 'Error al crear el pedido' });
   }
 }
 
