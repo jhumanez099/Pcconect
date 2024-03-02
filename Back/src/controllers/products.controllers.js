@@ -19,12 +19,11 @@ const getProducts = async (req, res) => {
   }
 }
 
-const createProductos = async (req, res) => {
-  const { nombre_producto, valor_actual, caracteristicas_producto } = req.body
-
+const createProducts = async (req, res) => {
+  const { id_producto, nombre_producto, valor_actual, caracteristicas_producto } = req.body
   try {
     const result = await new Promise((resolve, reject) => {
-      pool.query('INSERT INTO productos (nombre_producto, valor_actual, caracteristicas_producto) VALUES ($1, $2, $3) RETURNING *', [nombre_producto, valor_actual, caracteristicas_producto], (err, result) => {
+      pool.query('INSERT INTO productos (id_producto, nombre_producto, valor_actual, caracteristicas_producto) VALUES ($1, $2, $3, $4) RETURNING *', [id_producto, nombre_producto, valor_actual, caracteristicas_producto], (err, result) => {
         if (err) {
           reject(err)
         } else {
@@ -64,11 +63,11 @@ const getOnlyProduct = async (req, res) => {
 }
 
 const updateProducts = async (req, res) => {
-  const { id_producto } = req.params
-  const { nombre_producto, valor_actual, caracteristicas_producto } = req.body
+  const { id } = req.params
+  const { id_producto, nombre_producto, valor_actual, caracteristicas_producto } = req.body
   try {
     const result = await new Promise((resolve, reject) => {
-      pool.query('UPDATE productos SET nombre_producto = $1, valor_actual = $2, caracteristicas_producto = $3 WHERE id_producto = $4 RETURNING *', [nombre_producto, valor_actual, caracteristicas_producto, id_producto], (err, result) => {
+      pool.query('UPDATE productos SET id_producto = $1, nombre_producto = $2, valor_actual = $3, caracteristicas_producto = $4 WHERE id_producto = $5 RETURNING *', [id_producto, nombre_producto, valor_actual, caracteristicas_producto, id], (err, result) => {
         if (err) {
           reject(err)
         } else {
@@ -110,4 +109,4 @@ const deleteProducts = async (req, res) => {
   }
 }
 
-module.exports = { getOnlyProduct, getProducts, createProductos, updateProducts, deleteProducts }
+module.exports = { getOnlyProduct, getProducts, createProducts, updateProducts, deleteProducts }
