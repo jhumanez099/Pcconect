@@ -1,0 +1,96 @@
+/* Fondo del overlay */
+.custom-overlay {
+  background-color: rgba(0, 0, 0, 0.6); /* Ajuste de opacidad */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  inset: 0;
+  z-index: 1050; /* Asegúrate de que el modal esté encima */
+}
+
+/* Estilo del modal (contenido del modal) */
+.custom-modal {
+  max-width: 100%; /* Asegurarse de que el modal sea responsivo */
+  width: 600px; /* Tamaño estándar, puedes cambiarlo */
+  margin: 0 20px;
+  position: relative;
+  border-radius: 10px; /* Bordes redondeados */
+  border: 1px solid #dee2e6; /* Borde sutil */
+  background-color: white; /* Fondo blanco */
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+  opacity: 1 !important;
+  padding: 20px;
+}
+
+/* Estilo responsivo */
+@media (max-width: 768px) {
+  .custom-modal {
+    width: 90%; /* Modal más grande en pantallas pequeñas */
+    max-width: 400px;
+  }
+}
+
+/* Personalizar encabezado del modal */
+.modal-header {
+  background-color: #f8f9fa; /* Color de fondo más claro */
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  opacity: 0.7;
+}
+
+/* Estilo para el cuerpo del modal */
+.modal-body {
+  padding: 1.5rem;
+  color: #343a40;
+}
+
+/* Estilo para el pie del modal */
+.modal-footer {
+  background-color: #f8f9fa; /* Fondo claro */
+  border-top: 1px solid #dee2e6;
+  padding: 1rem;
+  text-align: center;
+}
+
+.modal-footer .btn-secondary {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.modal-footer .btn-success {
+  background-color: #198754;
+  color: #fff;
+  border: none;
+}
+
+/* Animación para suavizar la aparición */
+.custom-modal {
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
