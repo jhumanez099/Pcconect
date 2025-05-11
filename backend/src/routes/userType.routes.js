@@ -2,7 +2,6 @@ const express = require("express");
 const {
   crearTipoUsuario,
   consultarTipoUsuario,
-  consultarUnTipoUsuario,
   actualizarTipoUsuario,
   eliminarTipoUsuario,
 } = require("../controllers/userType.controller.js");
