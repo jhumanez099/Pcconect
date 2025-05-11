@@ -1,7 +1,7 @@
 const express = require("express");
 const {
   crearTipoUsuario,
-  consultarTipoUsuario,
+  consultarTiposUsuario,
   actualizarTipoUsuario,
   eliminarTipoUsuario,
 } = require("../controllers/userType.controller.js");
@@ -12,7 +12,7 @@ const router = express.Router();
 router.post("/tiposUsuarios", crearTipoUsuario);
 
 // Define la ruta para consultar todos los tipos de usuario
-router.get("/tiposUsuarios", consultarTipoUsuario);
+router.get("/tiposUsuarios", consultarTiposUsuario);
 
 // Define la ruta para actualizar un tipo de usuario
 router.put("/tiposUsuarios/:id", actualizarTipoUsuario);

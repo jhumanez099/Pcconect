@@ -23,32 +23,28 @@ const validateFields = (fields) => {
 
 const crearUsuario = async (req, res) => {
   const fields = {
-    idTipoUsuario: req.body.idTipoUsuario,
-    nombreUsuario: req.body.nombreUsuario,
-    correoUsuario: req.body.correoUsuario,
-    contraseñaUsuario: req.body.contraseñaUsuario,
-    telefonoUsuario: req.body.telefonoUsuario,
-    cargoUsuario: req.body.cargoUsuario,
-    estadoUsuario: req.body.estadoUsuario,
+    id_tipo_usuario: req.body.id_tipo_usuario,
+    nombre_usuario: req.body.nombre_usuario,
+    correo_usuario: req.body.correo_usuario,
+    contraseña_usuario: req.body.contraseña_usuario,
+    telefono_usuario: req.body.telefono_usuario,
+    cargo_usuario: req.body.cargo_usuario,
+    estado_usuario: req.body.estado_usuario,
   };
-  
+
   if (!validateFields(fields)) {
     return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
   }
 
   try {
-
-    const contraseñaEncriptada = await bcrypt.hash(
-      fields.contraseñaUsuario,
+    fields.contraseña_usuario = await bcrypt.hash(
+      fields.contraseña_usuario,
       10
     );
-
-    fields.contraseñaUsuario = contraseñaEncriptada;
-
-    const usuarioNuevo = await Usuario.crear(fields);
+    const nuevoUsuario = await Usuario.crear(fields);
     res.status(201).json({
       message: "Usuario creado con éxito",
-      usuarioId: usuarioNuevo.insertId,
+      usuarioId: nuevoUsuario.insertId,
     });
   } catch (error) {
     handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
@@ -64,31 +60,24 @@ const consultarUsuarios = async (req, res) => {
   }
 };
 
-
 const actualizarUsuario = async (req, res) => {
   const idUsuario = req.params.id;
   const fields = {
-    idTipoUsuario: req.body.idTipoUsuario,
-    nombreUsuario: req.body.nombreUsuario,
-    correoUsuario: req.body.correoUsuario,
-    contraseñaUsuario: req.body.contraseñaUsuario,
-    telefonoUsuario: req.body.telefonoUsuario,
-    cargoUsuario: req.body.cargoUsuario,
-    estadoUsuario: req.body.estadoUsuario,
+    id_tipo_usuario: req.body.id_tipo_usuario,
+    nombre_usuario: req.body.nombre_usuario,
+    correo_usuario: req.body.correo_usuario,
+    contraseña_usuario: req.body.contraseña_usuario,
+    telefono_usuario: req.body.telefono_usuario,
+    cargo_usuario: req.body.cargo_usuario,
+    estado_usuario: req.body.estado_usuario,
   };
 
   try {
-    // Obtener el usuario actual desde la base de datos
     const usuarioExistente = await Usuario.obtenerPorId(idUsuario);
-
-    // Si no existe el usuario, retornar error
     if (!usuarioExistente || usuarioExistente.length === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
+      return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
     }
 
-    // Filtrar solo los campos modificados
     const camposModificados = {};
     Object.keys(fields).forEach((key) => {
       if (fields[key] !== usuarioExistente[0][key]) {
@@ -96,23 +85,21 @@ const actualizarUsuario = async (req, res) => {
       }
     });
 
-    // Si no hay campos modificados, retornar mensaje de sin cambios
     if (Object.keys(camposModificados).length === 0) {
       return res
         .status(200)
         .json({ message: "No se realizaron cambios en el usuario." });
     }
 
-    // Actualizar solo los campos modificados
-    const usuarioActualizado = await Usuario.actualizar(
-      idUsuario,
-      camposModificados
+    camposModificados.contraseña_usuario = await bcrypt.hash(
+      fields.contraseña_usuario,
+      10
     );
 
-    if (usuarioActualizado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
+    const actualizado = await Usuario.actualizar(idUsuario, camposModificados);
+
+    if (actualizado.affectedRows === 0) {
+      return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
     }
 
     res.status(200).json({ message: "Usuario actualizado con éxito." });
@@ -124,14 +111,10 @@ const actualizarUsuario = async (req, res) => {
 const eliminarUsuario = async (req, res) => {
   const idUsuario = req.params.id;
 
-  if (!idUsuario) {
-    return res.status(400).json({ message: "El ID del usuario es requerido." });
-  }
-
   try {
-    const usuarioEliminado = await Usuario.eliminar(idUsuario);
+    const eliminado = await Usuario.eliminar(idUsuario);
 
-    if (usuarioEliminado.affectedRows === 0) {
+    if (eliminado.affectedRows === 0) {
       return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
     }
 

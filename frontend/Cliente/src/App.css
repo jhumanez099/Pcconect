@@ -94,3 +94,10 @@
     transform: translateY(0);
   }
 }
+
+@media (max-width: 576px) {
+  td.d-flex {
+    flex-direction: column !important;
+    align-items: center;
+  }
+}

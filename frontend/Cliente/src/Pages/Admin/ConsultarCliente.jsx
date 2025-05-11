@@ -159,9 +159,6 @@ export default function ConsultarCliente() {
       });
   };
 
-
-
-
   const resultadoFiltrado = useMemo(() => {
     return consultar
       ? clientes.filter((dato) =>

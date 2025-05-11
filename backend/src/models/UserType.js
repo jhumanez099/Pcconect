@@ -2,9 +2,9 @@ const pool = require("../config/db.js");
 
 const TipoUsuario = {
   // Crear un tipo de usuario
-  async crear(nombreTipoUsuario) {
+  async crear(fields) {
     const query = "INSERT INTO tipo_usuario(nombre_tipo_usuario) VALUES (?)";
-    const [result] = await pool.query(query, [nombreTipoUsuario]);
+    const [result] = await pool.query(query, [fields.nombre_tipo_usuario]);
     return result;
   },
 
@@ -23,10 +23,13 @@ const TipoUsuario = {
   },
 
   // Actualizar un tipo de usuario
-  async actualizar(id, nombreTipoUsuario) {
-    const query =
-      "UPDATE tipo_usuario SET nombre_tipo_usuario = ? WHERE id_tipo_usuario = ?";
-    const [result] = await pool.query(query, [nombreTipoUsuario, id]);
+  async actualizar(id, fields) {
+    const query = `
+      UPDATE tipo_usuario 
+      SET nombre_tipo_usuario = ?
+      WHERE id_tipo_usuario = ?
+    `;
+    const [result] = await pool.query(query, [fields.nombre_tipo_usuario, id]);
     return result;
   },
 
