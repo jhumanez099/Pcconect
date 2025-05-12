@@ -1,7 +1,7 @@
 const TipoPedido = require("../models/OrderType.js");
 
 const ERROR_MESSAGES = {
-  REQUIRED_FIELDS: "El nombre del tipo del pedido es requerido.",
+  REQUIRED_FIELDS: "El nombre del tipo de pedido es requerido.",
   ORDER_TYPE_NOT_FOUND: "Tipo de pedido no encontrado.",
   ORDER_TYPE_ALREADY_EXISTS: "El nombre del tipo de pedido ya existe.",
   CREATION_ERROR: "Error al crear el tipo de pedido.",
@@ -12,113 +12,96 @@ const ERROR_MESSAGES = {
 
 const handleError = (res, status, message, error = null) => {
   console.error(message, error);
-  res.status(status).json({ message });
+  return res.status(status).json({ message });
 };
 
-const validateFields = (fields) => {
-  return Object.values(fields).every(
-    (field) => field !== undefined && field !== null && field !== ""
-  );
-};
-
+// 🟩 Crear
 const crearTipoPedido = async (req, res) => {
-  const { nombreTipoPedido } = req.body;
+  const { nombre_tipo_pedido } = req.body;
 
-  if (!validateFields({ nombreTipoPedido })) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
+  if (!nombre_tipo_pedido?.trim()) {
+    return handleError(res, 400, ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   try {
-    const tipoPedidoNuevo = await TipoPedido.crear(nombreTipoPedido);
-
+    const result = await TipoPedido.crear(nombre_tipo_pedido);
     res.status(201).json({
-      message: "El tipo de pedido se creó con éxito",
-      tipoPedidoId: tipoPedidoNuevo.insertId,
+      message: "Tipo de pedido creado con éxito",
+      tipoPedidoId: result.insertId,
     });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      handleError(res, 400, ERROR_MESSAGES.ORDER_TYPE_ALREADY_EXISTS, error);
-    } else {
-      handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
+      return handleError(
+        res,
+        400,
+        ERROR_MESSAGES.ORDER_TYPE_ALREADY_EXISTS,
+        error
+      );
     }
+    return handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
   }
 };
 
-const consultarTipoPedido = async (req, res) => {
+// 🟦 Consultar todos
+const consultarTipoPedido = async (_req, res) => {
   try {
-    const tiposPedidos = await TipoPedido.obtenerTodos();
-    res.status(200).json(tiposPedidos);
+    const tipos = await TipoPedido.obtenerTodos();
+    res.status(200).json(tipos);
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
+// 🟨 Actualizar
 const actualizarTipoPedido = async (req, res) => {
-  const idTipoPedido = req.params.id;
-  const fields = {
-    nombre_tipo_pedido: req.body.nombre_tipo_pedido,
-  };
-
-  console.log(fields)
+  const id = req.params.id;
+  const { nombre_tipo_pedido } = req.body;
 
   try {
-    const tipoExistente = await TipoPedido.obtenerPorId(idTipoPedido);
-
-    if (!tipoExistente || tipoExistente.length === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND});
+    const existente = await TipoPedido.obtenerPorId(id);
+    if (!existente || existente.length === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND);
     }
 
-    const camposModificados = {};
-    Object.keys(fields).forEach((key) => {
-      if (fields[key] !== tipoExistente[0][key]) {
-        camposModificados[key] = fields[key];
-      }
-    });
+    const cambios = {};
+    if (nombre_tipo_pedido !== existente[0].nombre_tipo_pedido) {
+      cambios.nombre_tipo_pedido = nombre_tipo_pedido;
+    }
 
-    if (Object.keys(camposModificados).length === 0) {
+    if (Object.keys(cambios).length === 0) {
       return res.status(200).json({ message: "No se realizaron cambios." });
     }
 
-    const actualizado = await TipoPedido.actualizar(
-      idTipoPedido,
-      camposModificados
-    );
+    const resultado = await TipoPedido.actualizar(id, cambios);
 
-    if (actualizado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND });
+    if (resultado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND);
     }
 
     res.status(200).json({ message: "Tipo de pedido actualizado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
+// 🟥 Eliminar
 const eliminarTipoPedido = async (req, res) => {
-  const idTipoPedido = req.params.id;
+  const id = req.params.id;
 
-  if (!idTipoPedido) {
-    return res
-      .status(400)
-      .json({ message: "El ID del tipo de pedido es requerido." });
+  if (!id) {
+    return handleError(res, 400, "El ID del tipo de pedido es requerido.");
   }
 
   try {
-    const tipoPedidoEliminado = await TipoPedido.eliminar(idTipoPedido);
+    const resultado = await TipoPedido.eliminar(id);
 
-    if (tipoPedidoEliminado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND });
+    if (resultado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND);
     }
 
     res.status(200).json({ message: "Tipo de pedido eliminado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
   }
 };
 
