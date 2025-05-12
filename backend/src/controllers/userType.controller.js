@@ -1,7 +1,7 @@
 const TipoUsuario = require("../models/UserType.js");
 
 const ERROR_MESSAGES = {
-  REQUIRED_FIELDS: "El nombre del tipo del usuario es requerido.",
+  REQUIRED_FIELDS: "El nombre del tipo de usuario es requerido.",
   USER_TYPE_NOT_FOUND: "Tipo de usuario no encontrado.",
   USER_TYPE_ALREADY_EXISTS: "El nombre del tipo de usuario ya existe.",
   CREATION_ERROR: "Error al crear el tipo de usuario.",
@@ -12,106 +12,100 @@ const ERROR_MESSAGES = {
 
 const handleError = (res, status, message, error = null) => {
   console.error(message, error);
-  res.status(status).json({ message });
+  return res.status(status).json({ message });
 };
 
-const validateFields = (fields) => {
-  return Object.values(fields).every(
-    (field) => field !== undefined && field !== null && field !== ""
+const validarCampo = (campo) => {
+  return (
+    campo !== undefined && campo !== null && campo.toString().trim() !== ""
   );
 };
 
+// 🟩 Crear tipo de usuario
 const crearTipoUsuario = async (req, res) => {
-  const fields = {
-    nombre_tipo_usuario: req.body.nombre_tipo_usuario,
-  };
+  const { nombre_tipo_usuario } = req.body;
 
-  if (!validateFields(fields)) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
+  if (!validarCampo(nombre_tipo_usuario)) {
+    return handleError(res, 400, ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   try {
-    const nuevoTipo = await TipoUsuario.crear(fields);
-    res
-      .status(201)
-      .json({ message: "Tipo de usuario creado con éxito", nuevoTipo });
+    const result = await TipoUsuario.crear({ nombre_tipo_usuario });
+    return res.status(201).json({
+      message: "Tipo de usuario creado con éxito",
+      tipoUsuarioId: result.insertId,
+    });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      return res
-        .status(400)
-        .json({ message: ERROR_MESSAGES.USER_TYPE_ALREADY_EXISTS });
+      return handleError(
+        res,
+        400,
+        ERROR_MESSAGES.USER_TYPE_ALREADY_EXISTS,
+        error
+      );
     }
-    handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
   }
 };
 
-const consultarTiposUsuario = async (req, res) => {
+// 🟦 Consultar todos
+const consultarTiposUsuario = async (_req, res) => {
   try {
-    const tiposUsuarios = await TipoUsuario.obtenerTodos();
-    res.status(200).json(tiposUsuarios);
+    const tipos = await TipoUsuario.obtenerTodos();
+    return res.status(200).json(tipos);
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
+// 🟨 Actualizar tipo de usuario
 const actualizarTipoUsuario = async (req, res) => {
-  const idTipoUsuario = req.params.id;
-  const fields = {
-    nombre_tipo_usuario: req.body.nombre_tipo_usuario,
-  };
+  const id = req.params.id;
+  const { nombre_tipo_usuario } = req.body;
 
   try {
-    const tipoExistente = await TipoUsuario.obtenerPorId(idTipoUsuario);
-
-    if (!tipoExistente || tipoExistente.length === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.USER_TYPE_NOT_FOUND });
+    const existente = await TipoUsuario.obtenerPorId(id);
+    if (!existente || existente.length === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.USER_TYPE_NOT_FOUND);
     }
 
-    const camposModificados = {};
-    Object.keys(fields).forEach((key) => {
-      if (fields[key] !== tipoExistente[0][key]) {
-        camposModificados[key] = fields[key];
-      }
-    });
+    const cambios = {};
+    if (nombre_tipo_usuario !== existente[0].nombre_tipo_usuario) {
+      cambios.nombre_tipo_usuario = nombre_tipo_usuario;
+    }
 
-    if (Object.keys(camposModificados).length === 0) {
+    if (Object.keys(cambios).length === 0) {
       return res.status(200).json({ message: "No se realizaron cambios." });
     }
 
-    const actualizado = await TipoUsuario.actualizar(
-      idTipoUsuario,
-      camposModificados
-    );
-
+    const actualizado = await TipoUsuario.actualizar(id, cambios);
     if (actualizado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.USER_TYPE_NOT_FOUND });
+      return handleError(res, 404, ERROR_MESSAGES.USER_TYPE_NOT_FOUND);
     }
 
-    res.status(200).json({ message: "Tipo de usuario actualizado con éxito." });
+    return res
+      .status(200)
+      .json({ message: "Tipo de usuario actualizado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
+// 🟥 Eliminar tipo de usuario
 const eliminarTipoUsuario = async (req, res) => {
   const id = req.params.id;
 
   try {
     const eliminado = await TipoUsuario.eliminar(id);
-
     if (eliminado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.USER_TYPE_NOT_FOUND });
+      return handleError(res, 404, ERROR_MESSAGES.USER_TYPE_NOT_FOUND);
     }
 
-    res.status(200).json({ message: "Tipo de usuario eliminado con éxito." });
+    return res
+      .status(200)
+      .json({ message: "Tipo de usuario eliminado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
   }
 };
 
