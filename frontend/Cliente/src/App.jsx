@@ -1,39 +1,52 @@
-import './App.css'
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import CrearCliente from './Pages/Admin/CrearCliente.jsx'
-import ConsultarCliente from './Pages/Admin/ConsultarCliente.jsx'
-import CrearTipoUsuario from './Pages/Admin/CrearTipoUsuario.jsx'
-import ConsultarTipoUsuario from './Pages/Admin/ConsultarTipoUsuario.jsx'
-import CrearUsuario from './Pages/Admin/CrearUsuario.jsx'
-import ConsultarUsuario from './Pages/Admin/ConsultarUsuario.jsx'
-import CrearTipoEquipo from './Pages/Admin/CrearTipoEquipo.jsx'
-import ConsultarTipoEquipo from './Pages/Admin/ConsultarTipoEquipo.jsx'
-import CrearEquipo from './Pages/Admin/CrearEquipo.jsx'
-import ConsultarEquipo from './Pages/Admin/ConsultarEquipo.jsx'
-import MenuPrincipal from './Pages/Admin/MenuPrincipal.jsx'
-import CrearTipoPedido from './Pages/Admin/CrearTipoPedido.jsx'
-import ConsultarTipoPedido from './Pages/Admin/ConsultarTipoPedido.jsx'
-import Login from './Pages/login/login.jsx'
+// src/App.js
+import './App.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import CrearCliente from './Pages/Admin/CrearCliente';
+import ConsultarCliente from './Pages/Admin/ConsultarCliente';
+import CrearTipoUsuario from './Pages/Admin/CrearTipoUsuario';
+import ConsultarTipoUsuario from './Pages/Admin/ConsultarTipoUsuario';
+import CrearUsuario from './Pages/Admin/CrearUsuario';
+import ConsultarUsuario from './Pages/Admin/ConsultarUsuario';
+import CrearTipoEquipo from './Pages/Admin/CrearTipoEquipo';
+import ConsultarTipoEquipo from './Pages/Admin/ConsultarTipoEquipo';
+import CrearEquipo from './Pages/Admin/CrearEquipo';
+import ConsultarEquipo from './Pages/Admin/ConsultarEquipo';
+import MenuPrincipal from './Pages/Admin/MenuPrincipal';
+import CrearTipoPedido from './Pages/Admin/CrearTipoPedido';
+import ConsultarTipoPedido from './Pages/Admin/ConsultarTipoPedido';
+import Login from './Pages/login/login';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
-export default function App() {
+function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='/CrearCliente' element={<CrearCliente />} />
-        <Route path='/ConsultarCliente' element={<ConsultarCliente />} />
-        <Route path='/CrearTipoUsuario' element={<CrearTipoUsuario />} />
-        <Route path='/ConsultarTipoUsuario' element={<ConsultarTipoUsuario />} />
-        <Route path='/CrearUsuario' element={<CrearUsuario />} />
-        <Route path='/ConsultarUsuario' element={<ConsultarUsuario />} />
-        <Route path='/CrearTipoEquipo' element={<CrearTipoEquipo />} />
-        <Route path='/ConsultarTipoEquipo' element={<ConsultarTipoEquipo />} />
-        <Route path='/CrearEquipo' element={<CrearEquipo />} />
-        <Route path='/ConsultarEquipo' element={<ConsultarEquipo />} />
-        <Route path='/CrearTipoPedido' element={<CrearTipoPedido />} />
-        <Route path='/ConsultarTipoPedido' element={<ConsultarTipoPedido />} />
-        <Route path='/MenuPrincipal' element={<MenuPrincipal />} />
-        <Route path='/' element={<Login />} />
-      </Routes>
-    </BrowserRouter>
-  )
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* ✅ Ruta Pública: Login */}
+          <Route path="/" element={<Login />} />
+
+          {/* ✅ Rutas Protegidas */}
+          <Route path="/MenuPrincipal" element={<ProtectedRoute><MenuPrincipal /></ProtectedRoute>} />
+          <Route path="/CrearCliente" element={<ProtectedRoute><CrearCliente /></ProtectedRoute>} />
+          <Route path="/ConsultarCliente" element={<ProtectedRoute><ConsultarCliente /></ProtectedRoute>} />
+          <Route path="/CrearTipoUsuario" element={<ProtectedRoute><CrearTipoUsuario /></ProtectedRoute>} />
+          <Route path="/ConsultarTipoUsuario" element={<ProtectedRoute><ConsultarTipoUsuario /></ProtectedRoute>} />
+          <Route path="/CrearUsuario" element={<ProtectedRoute><CrearUsuario /></ProtectedRoute>} />
+          <Route path="/ConsultarUsuario" element={<ProtectedRoute><ConsultarUsuario /></ProtectedRoute>} />
+          <Route path="/CrearTipoEquipo" element={<ProtectedRoute><CrearTipoEquipo /></ProtectedRoute>} />
+          <Route path="/ConsultarTipoEquipo" element={<ProtectedRoute><ConsultarTipoEquipo /></ProtectedRoute>} />
+          <Route path="/CrearEquipo" element={<ProtectedRoute><CrearEquipo /></ProtectedRoute>} />
+          <Route path="/ConsultarEquipo" element={<ProtectedRoute><ConsultarEquipo /></ProtectedRoute>} />
+          <Route path="/CrearTipoPedido" element={<ProtectedRoute><CrearTipoPedido /></ProtectedRoute>} />
+          <Route path="/ConsultarTipoPedido" element={<ProtectedRoute><ConsultarTipoPedido /></ProtectedRoute>} />
+
+          {/* ✅ Ruta por defecto para redirigir al login si no está autenticado */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
 }
+
+export default App;

@@ -23,7 +23,7 @@ export default function LoginRegister() {
         setShowPassword(!showPassword);
     };
 
-   // ✅ En tu LoginRegister.js (React)
+// En tu LoginRegister.js
 const handleLogin = async () => {
     if (!email || !password) {
         alert("Correo y contraseña son requeridos");
@@ -31,7 +31,7 @@ const handleLogin = async () => {
     }
 
     try {
-        const response = await fetch("http://localhost:4000/api/login", {
+        const response = await fetch("http://localhost:4000/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -46,7 +46,6 @@ const handleLogin = async () => {
         const data = await response.json();
         if (response.ok) {
             alert("Inicio de sesión exitoso");
-            console.log("Usuario autenticado:", data);
             window.location.href = "/MenuPrincipal"; // Redirigir a perfil
         } else {
             alert(data.message);
@@ -57,42 +56,46 @@ const handleLogin = async () => {
     }
 };
 
-// En tu LoginRegister.js
-const handleRegister = async (e) => {
-    e.preventDefault();
-    
-    if (!name || !email || !password || !telefono || !cargo) {
-        alert("Todos los campos son obligatorios");
-        return;
-    }
 
-    try {
-        const response = await fetch("http://localhost:4000/api/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                nombre_usuario: name,
-                correo_usuario: email,
-                contraseña_usuario: password,
-                telefono_usuario: telefono,
-                cargo_usuario: cargo,
-                estado_usuario: "activo"
-            }),
-        });
-
-        const data = await response.json();
-        if (response.ok) {
-            alert("Registro exitoso");
-            setIsRegister(false);
-        } else {
-            alert(data.message);
+    // ✅ En tu LoginRegister.js (React)
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        
+        if (!name || !email || !password || !telefono || !cargo) {
+            alert("Todos los campos son obligatorios");
+            return;
         }
-    } catch (error) {
-        console.error("Error al registrar:", error);
-    }
-};
+
+        try {
+            const response = await fetch("http://localhost:4000/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                credentials: "include", // ✅ Permitir las cookies
+                body: JSON.stringify({
+                    nombre_usuario: name,
+                    correo_usuario: email,
+                    contraseña_usuario: password,
+                    telefono_usuario: telefono,
+                    cargo_usuario: cargo,
+                }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert("Registro exitoso");
+                console.log("Usuario registrado:", data);
+                // ✅ Redirigir automáticamente a MenuPrincipal
+                window.location.href = "/MenuPrincipal";
+            } else {
+                alert(data.message);
+            }
+        } catch (error) {
+            console.error("Error al registrar:", error);
+        }
+    };
+
 
 
     return (
