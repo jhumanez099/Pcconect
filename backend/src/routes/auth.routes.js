@@ -4,16 +4,14 @@ const router = express.Router();
 const { register, login, logout } = require("../controllers/auth.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 
-// ✅ Ruta para Registrar Usuarios (Pública)
+// ✅ Rutas Públicas
 router.post("/register", register);
-
-// ✅ Ruta para Iniciar Sesión (Pública)
 router.post("/login", login);
 
-// ✅ Ruta para Cerrar Sesión (Pública)
+// ✅ Ruta de Logout (Pública)
 router.post("/logout", logout);
 
-// ✅ Ruta Protegida (Requiere Autenticación)
+// ✅ Ruta Protegida para el Perfil (Solo usuarios autenticados)
 router.get("/profile", authMiddleware, (req, res) => {
   res.status(200).json({
     message: "Perfil del usuario autenticado.",

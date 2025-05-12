@@ -3,19 +3,17 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Usuario = require("../models/User.js");
 
-// ✅ Registro de Usuarios (Siempre como Auxiliar de pedidos)
+// ✅ Registro de Usuarios
 const register = async (req, res) => {
   const { 
     nombre_usuario, 
     correo_usuario, 
     contraseña_usuario,
     telefono_usuario,
-    cargo_usuario,
-    estado_usuario 
+    cargo_usuario 
   } = req.body;
 
-  // ✅ Validar que los campos son obligatorios
-  if (!nombre_usuario || !correo_usuario || !contraseña_usuario || !telefono_usuario || !cargo_usuario) {
+  if (!nombre_usuario || !correo_usuario || !contraseña_usuario) {
     return res.status(400).json({ message: "Todos los campos son obligatorios." });
   }
 
@@ -29,57 +27,20 @@ const register = async (req, res) => {
     // ✅ Encriptar la contraseña
     const contraseñaEncriptada = await bcrypt.hash(contraseña_usuario, 10);
 
-    // ✅ Crear el usuario siempre como "Auxiliar de pedidos"
+    // ✅ Crear el usuario
     const nuevoUsuario = await Usuario.crear({
-      id_tipo_usuario: 12, // ✅ Siempre será "Auxiliar de pedidos"
+      id_tipo_usuario: 12, // Ajusta según tu lógica
       nombre_usuario,
       correo_usuario,
       contraseña_usuario: contraseñaEncriptada,
       telefono_usuario,
       cargo_usuario,
-      estado_usuario: estado_usuario || "activo"
+      estado_usuario: "activo"
     });
 
-    res.status(201).json({ 
-      message: "Usuario registrado con éxito", 
-      usuarioId: nuevoUsuario.insertId 
-    });
-  } catch (error) {
-    console.error("Error en el registro:", error);
-    res.status(500).json({ message: "Error al registrar el usuario" });
-  }
-};
-
-// ✅ Login de Usuarios (Sin cambios)
-// ✅ Login de Usuarios (Mejorado)
-const login = async (req, res) => {
-  const { correo_usuario, contraseña_usuario } = req.body;
-
-  // ✅ Verificar que los campos están presentes
-  if (!correo_usuario || !contraseña_usuario) {
-    return res.status(400).json({ message: "Correo y contraseña son requeridos." });
-  }
-
-  try {
-    // ✅ Verificar si el usuario existe
-    const usuario = await Usuario.obtenerPorCorreo(correo_usuario);
-    if (!usuario) {
-      return res.status(404).json({ message: "Usuario no encontrado." });
-    }
-
-    // ✅ Verificar la contraseña encriptada
-    const contraseñaCorrecta = await bcrypt.compare(contraseña_usuario, usuario.contraseña_usuario);
-    if (!contraseñaCorrecta) {
-      return res.status(401).json({ message: "Contraseña incorrecta." });
-    }
-
-    // ✅ Generar el token JWT
+    // ✅ Iniciar sesión automáticamente (generar JWT)
     const token = jwt.sign(
-      {
-        id: usuario.id_usuario,
-        nombre: usuario.nombre_usuario,
-        id_tipo_usuario: usuario.id_tipo_usuario,
-      },
+      { id: nuevoUsuario.insertId, nombre: nombre_usuario },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -88,30 +49,72 @@ const login = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 1 día de duración
       sameSite: "Lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 día
     });
 
-    res.status(200).json({ 
-      message: "Usuario autenticado correctamente", 
-      usuario: {
-        id: usuario.id_usuario,
-        nombre: usuario.nombre_usuario,
-        correo: usuario.correo_usuario,
-        tipo: usuario.id_tipo_usuario
-      }
+    res.status(201).json({ 
+      message: "Usuario registrado y autenticado con éxito", 
+      usuarioId: nuevoUsuario.insertId 
     });
+  } catch (error) {
+    console.error("Error en el registro:", error);
+    res.status(500).json({ message: "Error al registrar el usuario" });
+  }
+};
+// ✅ Login de Usuarios (Sin cambios)
+const login = async (req, res) => {
+  const { correo_usuario, contraseña_usuario } = req.body;
+
+  if (!correo_usuario || !contraseña_usuario) {
+    return res.status(400).json({ message: "Correo y contraseña son requeridos." });
+  }
+
+  try {
+    const usuario = await Usuario.obtenerPorCorreo(correo_usuario);
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+
+    const contraseñaCorrecta = await bcrypt.compare(contraseña_usuario, usuario.contraseña_usuario);
+    if (!contraseñaCorrecta) {
+      return res.status(401).json({ message: "Contraseña incorrecta." });
+    }
+
+    const token = jwt.sign(
+      { id: usuario.id_usuario, nombre: usuario.nombre_usuario },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    // ✅ Configurar la cookie del token (asegurarse de que SameSite sea "Lax")
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax", // ✅ Asegurar que la cookie esté disponible en el frontend
+      maxAge: 24 * 60 * 60 * 1000, // 1 día
+    });
+
+    res.status(200).json({ message: "Usuario autenticado correctamente" });
   } catch (error) {
     console.error("Error al iniciar sesión:", error);
     res.status(500).json({ message: "Error al iniciar sesión" });
   }
 };
 
-// ✅ Logout (Cerrar Sesión)
+
+// src/controllers/auth.controller.js
 const logout = (req, res) => {
-  res.clearCookie("token");
-  res.status(200).json({ message: "Usuario desconectado con éxito." });
+  // ✅ Limpiar la cookie del token JWT
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Lax",
+  });
+
+  res.status(200).json({ message: "Sesión cerrada correctamente." });
 };
+
 
 // ✅ Exportar las funciones
 module.exports = {
