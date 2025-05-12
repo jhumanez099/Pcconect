@@ -7,20 +7,20 @@ import { useNavigate } from "react-router-dom";
 export default function CrearTipoEquipo() {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const [globalError, setGlobalError] = useState(null);
-
-  const onSubmit = (data) => {
-    Axios.post("http://localhost:3000/api/tiposEquipos", data)
-      .then(() => {
-        reset();
-        setGlobalError(null);
-      })
-      .catch((error) => {
-        const msg = error.response?.data?.message || "Error al crear el tipo de equipo.";
-        setGlobalError(msg);
-      });
-  };
-
   const navigate = useNavigate();
+
+  const onSubmit = async (data) => {
+    try {
+      await Axios.post("http://localhost:3000/api/tiposEquipos", data);
+      reset();
+      setGlobalError(null);
+      alert("Tipo de equipo creado correctamente.");
+      // navigate("/admin/consultarTipoEquipo"); // si deseas redirigir
+    } catch (error) {
+      const msg = error.response?.data?.message || "Error al crear el tipo de equipo.";
+      setGlobalError(msg);
+    }
+  };
 
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
@@ -46,7 +46,13 @@ export default function CrearTipoEquipo() {
                   type="text"
                   className={`form-control ${errors.nombre_tipo_equipo ? "is-invalid" : ""}`}
                   id="nombre_tipo_equipo"
-                  {...register("nombre_tipo_equipo", { required: "El nombre es obligatorio" })}
+                  {...register("nombre_tipo_equipo", {
+                    required: "El nombre es obligatorio",
+                    minLength: {
+                      value: 3,
+                      message: "Debe tener al menos 3 caracteres",
+                    },
+                  })}
                 />
                 {errors.nombre_tipo_equipo && (
                   <div className="invalid-feedback">{errors.nombre_tipo_equipo.message}</div>

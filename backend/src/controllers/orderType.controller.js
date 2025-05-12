@@ -55,50 +55,44 @@ const consultarTipoPedido = async (req, res) => {
 
 const actualizarTipoPedido = async (req, res) => {
   const idTipoPedido = req.params.id;
-  const { nombreTipoPedido } = req.body;
+  const fields = {
+    nombre_tipo_pedido: req.body.nombre_tipo_pedido,
+  };
+
+  console.log(fields)
 
   try {
-    // Obtener el tipo pedido actual desde la base de datos
-    const tipoPedidoExistente = await TipoPedido.obtenerPorId(idTipoPedido);
+    const tipoExistente = await TipoPedido.obtenerPorId(idTipoPedido);
 
-    // Si no existe el tipo pedido, retornar error
-    if (!tipoPedidoExistente || tipoPedidoExistente.length === 0) {
+    if (!tipoExistente || tipoExistente.length === 0) {
       return res
         .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND });
+        .json({ message: ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND});
     }
 
-    // Filtrar solo los campos modificados
     const camposModificados = {};
+    Object.keys(fields).forEach((key) => {
+      if (fields[key] !== tipoExistente[0][key]) {
+        camposModificados[key] = fields[key];
+      }
+    });
 
-    // Comprobar si el nombre del tipo pedido ha cambiado
-    if (
-      nombreTipoPedido &&
-      nombreTipoPedido !== tipoEquipoActualizado[0].nombreTipoPedido
-    ) {
-      camposModificados.nombreTipoPedido = nombreTipoPedido; // Solo agregar los campos que cambian
-    }
-
-    // Si no hay campos modificados, retornar mensaje de sin cambios
     if (Object.keys(camposModificados).length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No se realizaron cambios en el tipo de pedido." });
+      return res.status(200).json({ message: "No se realizaron cambios." });
     }
 
-    // Actualizar solo los campos modificados
-    const tipoPedidoActualizado = await TipoPedido.actualizar(
+    const actualizado = await TipoPedido.actualizar(
       idTipoPedido,
       camposModificados
     );
 
-    if (tipoPedidoActualizado.affectedRows === 0) {
+    if (actualizado.affectedRows === 0) {
       return res
         .status(404)
         .json({ message: ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND });
     }
 
-    res.status(200).json({ message: "Tipo del pedido actualizado con éxito." });
+    res.status(200).json({ message: "Tipo de pedido actualizado con éxito." });
   } catch (error) {
     handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }

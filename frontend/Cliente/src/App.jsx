@@ -11,6 +11,8 @@ import ConsultarTipoEquipo from './Pages/Admin/ConsultarTipoEquipo.jsx'
 import CrearEquipo from './Pages/Admin/CrearEquipo.jsx'
 import ConsultarEquipo from './Pages/Admin/ConsultarEquipo.jsx'
 import MenuPrincipal from './Pages/Admin/MenuPrincipal.jsx'
+import CrearTipoPedido from './Pages/Admin/CrearTipoPedido.jsx'
+import ConsultarTipoPedido from './Pages/Admin/ConsultarTipoPedido.jsx'
 
 
 
@@ -29,6 +31,8 @@ export default function App() {
         <Route path='/ConsultarTipoEquipo' element={<ConsultarTipoEquipo />} />
         <Route path='/CrearEquipo' element={<CrearEquipo />} />
         <Route path='/ConsultarEquipo' element={<ConsultarEquipo />} />
+        <Route path='/CrearTipoPedido' element={<CrearTipoPedido />} />
+        <Route path='/ConsultarTipoPedido' element={<ConsultarTipoPedido />} />
         <Route path='/MenuPrincipal' element={<MenuPrincipal />} />
       </Routes>
     </BrowserRouter>

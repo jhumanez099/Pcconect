@@ -28,80 +28,79 @@ TipoEquipoRow.propTypes = {
   onEditar: PropTypes.func.isRequired,
 };
 
-
 export default function ConsultarTipoEquipo() {
-  const [tipoEquipo, setTipoEquipo] = useState([]);
-  const [consultar, setConsultar] = useState("");
-  const [editingTipoEquipo, setEditingTipoEquipo] = useState(null);
+  const [tipos, setTipos] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [editingTipo, setEditingTipo] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  const ConsultarTipoEquipo = () => {
+  const obtenerTipos = () => {
     Axios.get("http://localhost:3000/api/tiposEquipos")
       .then((response) => {
-        setTipoEquipo(response.data);
+        setTipos(response.data);
         setError(null);
       })
-      .catch((error) => {
-        console.error("Error en la consulta los tipos de equipo:", error);
-        setError(
-          "Hubo un error al cargar los tipos de equipo. Por favor, intenta nuevamente."
-        );
+      .catch(() => {
+        setError("Error al cargar los tipos de equipo.");
       });
   };
 
-  const eliminarTipoEquipo = (id) => {
+  const eliminarTipo = (id) => {
     Axios.delete(`http://localhost:3000/api/tiposEquipos/${id}`)
       .then(() => {
-        setTipoEquipo((prevTipoEquipo) =>
-          prevTipoEquipo.filter((tipoEquipo) => tipoEquipo.id_tipo_equipo !== id)
-        );
-
+        setTipos((prev) => prev.filter((t) => t.id_tipo_equipo !== id));
       })
-      .catch((error) => {
-        console.error(error);
+      .catch((err) => {
+        console.error(err);
+        alert("Error al eliminar el tipo.");
       });
-  }
+  };
 
-  const openModal = (tipoEquipo) => {
-    if (tipoEquipo) {
-      setEditingTipoEquipo(tipoEquipo);
-      setIsModalOpen(true);
+  const openModal = (tipo) => {
+    setEditingTipo(tipo);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingTipo(null);
+  };
+
+  const handleChange = (e) => {
+    setEditingTipo({ ...editingTipo, nombre_tipo_equipo: e.target.value });
+  };
+
+  const editarTipo = () => {
+    if (!editingTipo.nombre_tipo_equipo.trim()) {
+      alert("El nombre no puede estar vacío.");
+      return;
     }
-  };
 
-  const closeModal = () => setIsModalOpen(false);
-
-  const handleNombreChange = (e) => {
-    const updated = {
-      ...editingTipoEquipo,
-      nombre_tipo_equipo: e.target.value,
-    };
-    setEditingTipoEquipo(updated);
-  };
-
-  const editarTipoEquipo = () => {
-    Axios.put(`http://localhost:3000/api/tiposEquipos/${editingTipoEquipo.id_tipo_equipo}`, {
-      nombre_tipo_equipo: editingTipoEquipo.nombre_tipo_equipo,
+    Axios.put(`http://localhost:3000/api/tiposEquipos/${editingTipo.id_tipo_equipo}`, {
+      nombre_tipo_equipo: editingTipo.nombre_tipo_equipo,
     })
       .then(() => {
-        ConsultarTipoEquipo();
+        obtenerTipos();
         closeModal();
       })
-      .catch(err => console.error(err));
+      .catch((err) => {
+        console.error(err);
+        alert("Error al actualizar.");
+      });
   };
 
   const tiposFiltrados = useMemo(() => {
-    return consultar
-      ? tipoEquipo.filter(t => t.nombre_tipo_equipo.toLowerCase().includes(tipoEquipo.toLowerCase()))
-      : tipoEquipo;
-  }, [consultar, tipoEquipo]);
+    const texto = busqueda.toLowerCase();
+    return tipos.filter((t) =>
+      t.nombre_tipo_equipo.toLowerCase().includes(texto)
+    );
+  }, [busqueda, tipos]);
 
   useEffect(() => {
-    ConsultarTipoEquipo();
+    obtenerTipos();
   }, []);
-
-  const navigate = useNavigate();
 
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
@@ -120,8 +119,9 @@ export default function ConsultarTipoEquipo() {
               type="text"
               className="form-control"
               placeholder="Buscar tipo de equipo"
-              value={consultar}
-              onChange={(e) => setConsultar(e.target.value)}
+              aria-label="Buscar tipo de equipo"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
           {error && <div className="alert alert-danger">{error}</div>}
@@ -139,12 +139,12 @@ export default function ConsultarTipoEquipo() {
             </thead>
             <tbody>
               {tiposFiltrados.length > 0 ? (
-                tiposFiltrados.map((tipoEquipo) => (
+                tiposFiltrados.map((tipo) => (
                   <TipoEquipoRow
-                    key={tipoEquipo.id_tipo_equipo}
-                    tipoEquipo={tipoEquipo}
+                    key={tipo.id_tipo_equipo}
+                    tipoEquipo={tipo}
                     onEditar={openModal}
-                    onEliminar={eliminarTipoEquipo}
+                    onEliminar={eliminarTipo}
                   />
                 ))
               ) : (
@@ -178,15 +178,14 @@ export default function ConsultarTipoEquipo() {
                   type="text"
                   className="form-control"
                   id="nombre_tipo_equipo"
-                  name="nombre_tipo_equipo"
-                  value={editingTipoEquipo?.nombre_tipo_equipo || ""}
-                  onChange={handleNombreChange}
+                  value={editingTipo?.nombre_tipo_equipo || ""}
+                  onChange={handleChange}
                 />
               </div>
             </form>
           </div>
           <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success w-50" onClick={editarTipoEquipo}>
+            <button className="btn btn-success w-50" onClick={editarTipo}>
               Guardar Cambios
             </button>
           </div>

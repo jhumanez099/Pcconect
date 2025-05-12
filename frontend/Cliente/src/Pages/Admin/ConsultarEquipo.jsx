@@ -25,88 +25,75 @@ function EquipoRow({ equipo, onEditar, onEliminar }) {
 }
 
 EquipoRow.propTypes = {
-  equipo: PropTypes.shape({
-    id_equipo: PropTypes.number.isRequired,
-    nombre_tipo_equipo: PropTypes.string.isRequired,
-    nombre_equipo: PropTypes.string.isRequired,
-    modelo_equipo: PropTypes.string.isRequired,
-    marca_equipo: PropTypes.string.isRequired,
-    especificaciones_equipo: PropTypes.string.isRequired,
-    estado_equipo: PropTypes.string.isRequired,
-    fecha_compra_equipo: PropTypes.string.isRequired,
-  }).isRequired,
-  onEliminar: PropTypes.func.isRequired,
+  equipo: PropTypes.object.isRequired,
   onEditar: PropTypes.func.isRequired,
+  onEliminar: PropTypes.func.isRequired,
 };
 
-
 export default function ConsultarEquipo() {
-  const [equipo, setEquipo] = useState([]);
-  const [consultar, setConsultar] = useState("");
-  const [editingEquipo, setEditingEquipo] = useState(null);
+  const [equipos, setEquipos] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [equipoEditando, setEquipoEditando] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tipoEquipo, setTipoEquipo] = useState([]);
+  const [tiposEquipo, setTiposEquipo] = useState([]);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const obtenerEquipos = () => {
     Axios.get("http://localhost:3000/api/equipos")
-      .then(res => {
-        setEquipo(res.data);
-        setError(null);
-      })
-      .catch(() => {
-        setError("Error al cargar los equipos.");
-      });
+      .then(res => setEquipos(res.data))
+      .catch(() => setError("Error al cargar los equipos."));
   };
 
-  const obtenerTipoEquipo = () => {
+  const obtenerTiposEquipo = () => {
     Axios.get("http://localhost:3000/api/tiposEquipos")
-      .then(res => setTipoEquipo(res.data))
+      .then(res => setTiposEquipo(res.data))
       .catch(err => console.error(err));
   };
 
   const eliminarEquipo = (id) => {
     Axios.delete(`http://localhost:3000/api/equipos/${id}`)
-      .then(() => {
-        setEquipo(prev => prev.filter(u => u.id_equipo !== id));
-      })
+      .then(() => setEquipos(prev => prev.filter(e => e.id_equipo !== id)))
       .catch(err => console.error(err));
   };
 
   const openModal = (equipo) => {
-    if (equipo) {
-      setEditingEquipo(equipo);
-      setIsModalOpen(true);
-    }
+    setEquipoEditando(equipo);
+    setIsModalOpen(true);
   };
 
-  const closeModal = () => setIsModalOpen(false);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEquipoEditando(null);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditingEquipo((prev) => ({ ...prev, [name]: value }));
+    setEquipoEditando(prev => ({ ...prev, [name]: value }));
   };
 
   const actualizarEquipo = () => {
-    Axios.put(`http://localhost:3000/api/equipos/${editingEquipo.id_equipo}`, {
-      idTipoEquipo: editingEquipo.idTipoEquipo,
-      nombreEquipo: editingEquipo.nombreEquipo,
-      modeloEquipo: editingEquipo.modeloEquipo,
-      marcaEquipo: editingEquipo.marcaEquipo,
-      especificacionesEquipo: editingEquipo.especificacionesEquipo,
-      estadoEquipo: editingEquipo.estadoEquipo,
-      fechaCompraEquipo: editingEquipo.fechaCompraEquipo,
+    const fechaFormateada = new Date(equipoEditando.fecha_compra_equipo).toISOString().split("T")[0];
+
+    Axios.put(`http://localhost:3000/api/equipos/${equipoEditando.id_equipo}`, {
+      id_tipo_equipo: equipoEditando.id_tipo_equipo,
+      modelo_equipo: equipoEditando.modelo_equipo,
+      marca_equipo: equipoEditando.marca_equipo,
+      especificaciones_equipo: equipoEditando.especificaciones_equipo,
+      fecha_compra_equipo: fechaFormateada,
+      estado_equipo: equipoEditando.estado_equipo,
     })
       .then(() => {
+        alert("Equipo actualizado correctamente.");
         obtenerEquipos();
         closeModal();
       })
-      .catch(err => console.error(err));
+      .catch(() => alert("Error al actualizar el equipo."));
   };
 
   const resultadoFiltrado = useMemo(() => {
-    const texto = consultar.toLowerCase();
-    return equipo.filter((item) =>
+    const texto = busqueda.toLowerCase();
+    return equipos.filter(item =>
       [
         item.nombre_tipo_equipo,
         item.modelo_equipo,
@@ -119,15 +106,12 @@ export default function ConsultarEquipo() {
         .toLowerCase()
         .includes(texto)
     );
-  }, [consultar, equipo]);
-  
+  }, [busqueda, equipos]);
 
   useEffect(() => {
     obtenerEquipos();
-    obtenerTipoEquipo();
+    obtenerTiposEquipo();
   }, []);
-
-  const navigate = useNavigate();
 
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
@@ -145,9 +129,10 @@ export default function ConsultarEquipo() {
             <input
               type="text"
               className="form-control"
-              placeholder=""
-              value={consultar}
-              onChange={(e) => setConsultar(e.target.value)}
+              placeholder="Buscar por tipo, modelo, marca..."
+              aria-label="Buscar equipo"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
           {error && <div className="alert alert-danger">{error}</div>}
@@ -164,7 +149,7 @@ export default function ConsultarEquipo() {
                 <th>Marca</th>
                 <th>Especificaciones</th>
                 <th>Estado</th>
-                <th>fecha de compra</th>
+                <th>Fecha de compra</th>
                 <th>Opciones</th>
               </tr>
             </thead>
@@ -198,23 +183,23 @@ export default function ConsultarEquipo() {
       >
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Editar Usuario</h5>
+            <h5 className="modal-title">Editar equipo</h5>
             <button type="button" className="btn-close" onClick={closeModal}></button>
           </div>
           <div className="modal-body">
-            {editingEquipo && (
+            {equipoEditando && (
               <form>
                 <div className="mb-3">
                   <label htmlFor="id_tipo_equipo" className="form-label">Tipo de equipo:</label>
                   <select
                     className="form-select"
-                    id="idTipoEquipo"
-                    name="idTipoEquipo"
-                    value={editingEquipo.idTipoEquipo || ""}
+                    id="id_tipo_equipo"
+                    name="id_tipo_equipo"
+                    value={equipoEditando.id_tipo_equipo}
                     onChange={handleChange}
                   >
                     <option value="">Seleccione...</option>
-                    {tipoEquipo.map((tipo) => (
+                    {tiposEquipo.map((tipo) => (
                       <option key={tipo.id_tipo_equipo} value={tipo.id_tipo_equipo}>
                         {tipo.nombre_tipo_equipo}
                       </option>
@@ -222,10 +207,10 @@ export default function ConsultarEquipo() {
                   </select>
                 </div>
                 {[
-                  { label: "Modelo", id: "modeloEquipo", type: "text" },
-                  { label: "Marca", id: "marcaEquipo", type: "email" },
-                  { label: "Especificaciones", id: "especificacionesEquipo", type: "text" },
-                  { label: "Fecha de compra", id: "fechaCompraEquipo", type: "date" },
+                  { label: "Modelo", id: "modelo_equipo", type: "text" },
+                  { label: "Marca", id: "marca_equipo", type: "text" },
+                  { label: "Especificaciones", id: "especificaciones_equipo", type: "text" },
+                  { label: "Fecha de compra", id: "fecha_compra_equipo", type: "date" },
                 ].map((field, idx) => (
                   <div className="mb-3" key={idx}>
                     <label htmlFor={field.id} className="form-label">{field.label}:</label>
@@ -234,7 +219,7 @@ export default function ConsultarEquipo() {
                       className="form-control"
                       id={field.id}
                       name={field.id}
-                      value={editingEquipo[field.id] || ""}
+                      value={equipoEditando[field.id]}
                       onChange={handleChange}
                     />
                   </div>
@@ -244,16 +229,15 @@ export default function ConsultarEquipo() {
                   <label htmlFor="estado_equipo" className="form-label">Estado:</label>
                   <select
                     className="form-select"
-                    id="estadoEquipo"
-                    name="estadoEquipo"
-                    value={editingEquipo.estado_equipo || ""}
+                    id="estado_equipo"
+                    name="estado_equipo"
+                    value={equipoEditando.estado_equipo}
                     onChange={handleChange}
                   >
                     <option value="Activo">Activo</option>
                     <option value="Inactivo">Inactivo</option>
                   </select>
                 </div>
-
               </form>
             )}
           </div>
@@ -267,4 +251,3 @@ export default function ConsultarEquipo() {
     </div>
   );
 }
-

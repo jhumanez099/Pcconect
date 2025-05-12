@@ -12,7 +12,7 @@ const ERROR_MESSAGES = {
 
 const handleError = (res, status, message, error = null) => {
   console.error(message, error);
-  res.status(status).json({ message });
+  return res.status(status).json({ message });
 };
 
 const validateFields = (fields) => {
@@ -21,97 +21,89 @@ const validateFields = (fields) => {
   );
 };
 
+// 🟩 Crear
 const crearTipoEquipo = async (req, res) => {
-  const fields = {
-    nombre_tipo_equipo: req.body.nombre_tipo_equipo,
-  };
+  const { nombre_tipo_equipo } = req.body;
 
-  if (!validateFields(fields)) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
+  if (!validateFields({ nombre_tipo_equipo })) {
+    return handleError(res, 400, ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   try {
-    const nuevoTipo = await TipoEquipo.crear(fields);
+    const result = await TipoEquipo.crear({ nombre_tipo_equipo });
     res.status(201).json({
       message: "Tipo de equipo creado con éxito",
-      tipoEquipoId: nuevoTipo.insertId,
+      tipoEquipoId: result.insertId,
     });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      handleError(
+      return handleError(
         res,
         400,
         ERROR_MESSAGES.EQUIPMENT_TYPE_ALREADY_EXISTS,
         error
       );
-    } else {
-      handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
     }
+    return handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
   }
 };
 
-const consultarTipoEquipo = async (req, res) => {
+// 🟦 Consultar
+const consultarTipoEquipo = async (_req, res) => {
   try {
     const tipos = await TipoEquipo.obtenerTodos();
     res.status(200).json(tipos);
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
+// 🟨 Actualizar
 const actualizarTipoEquipo = async (req, res) => {
   const id = req.params.id;
-  const fields = {
-    nombre_tipo_equipo: req.body.nombre_tipo_equipo,
-  };
+  const { nombre_tipo_equipo } = req.body;
 
   try {
     const existente = await TipoEquipo.obtenerPorId(id);
-
     if (!existente || existente.length === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND });
+      return handleError(res, 404, ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND);
     }
 
     const cambios = {};
-    if (fields.nombre_tipo_equipo !== existente[0].nombre_tipo_equipo) {
-      cambios.nombre_tipo_equipo = fields.nombre_tipo_equipo;
+    if (nombre_tipo_equipo !== existente[0].nombre_tipo_equipo) {
+      cambios.nombre_tipo_equipo = nombre_tipo_equipo;
     }
 
     if (Object.keys(cambios).length === 0) {
       return res.status(200).json({ message: "No se realizaron cambios." });
     }
 
-    const actualizado = await TipoEquipo.actualizar(id, cambios);
+    const resultado = await TipoEquipo.actualizar(id, cambios);
 
-    if (actualizado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND });
+    if (resultado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND);
     }
 
     res.status(200).json({ message: "Tipo de equipo actualizado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
+// 🟥 Eliminar
 const eliminarTipoEquipo = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const eliminado = await TipoEquipo.eliminar(id);
+    const resultado = await TipoEquipo.eliminar(id);
 
-    if (eliminado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND });
+    if (resultado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND);
     }
 
     res.status(200).json({ message: "Tipo de equipo eliminado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
   }
 };
 

@@ -1,41 +1,43 @@
-const pool = require("../config/db.js");
+const connection = require("../config/db");
 
-const TipoPedido = {
-  // Crear un tipo de pedido
-  async crear(nombreTipoPedido) {
-    const query = "INSERT INTO tipo_pedido(nombre_tipo_pedido) VALUES (?)";
-    const [result] = await pool.query(query, [nombreTipoPedido]);
-    return result;
-  },
-
-  // Obtener todos los tipos de pedido
-  async obtenerTodos() {
-    const query = "SELECT * FROM tipo_pedido";
-    const [tiposPedidos] = await pool.query(query);
-    return tiposPedidos;
-  },
-
-  // Obtener un tipo de pedido por ID
-  async obtenerPorId(id) {
-    const query = "SELECT * FROM tipo_pedido WHERE id_tipo_pedido = ?";
-    const [tipoPedido] = await pool.query(query, [id]);
-    return tipoPedido;
-  },
-
-  // Actualizar un tipo de pedido
-  async actualizar(id, nombreTipoPedido) {
-    const query =
-      "UPDATE tipo_pedido SET nombre_tipo_pedido = ? WHERE id_tipo_pedido = ?";
-    const [result] = await pool.query(query, [nombreTipoPedido, id]);
-    return result;
-  },
-
-  // Eliminar un tipo de pedido
-  async eliminar(id) {
-    const query = "DELETE FROM tipo_pedido WHERE id_tipo_pedido = ?";
-    const [result] = await pool.query(query, [id]);
-    return result;
-  },
+const crear = async (nombre_tipo_pedido) => {
+  const sql = "INSERT INTO tipo_pedido (nombre_tipo_pedido) VALUES (?)";
+  return await connection.query(sql, [nombre_tipo_pedido]);
 };
 
-module.exports = TipoPedido;
+const obtenerTodos = async () => {
+  const sql = "SELECT * FROM tipo_pedido";
+  const [rows] = await connection.query(sql);
+  return rows;
+};
+
+const obtenerPorId = async (id) => {
+  const sql = "SELECT * FROM tipo_pedido WHERE id_tipo_pedido = ?";
+  const [rows] = await connection.query(sql, [id]);
+  return rows;
+};
+
+const actualizar = async (id, campos) => {
+  const camposSQL = Object.keys(campos)
+    .map((key) => `${key} = ?`)
+    .join(", ");
+
+  const valores = Object.values(campos);
+
+  const sql = `UPDATE tipo_pedido SET ${camposSQL} WHERE id_tipo_pedido = ?`;
+
+  return await connection.query(sql, [...valores, id]);
+};
+
+const eliminar = async (id) => {
+  const sql = "DELETE FROM tipo_pedido WHERE id_tipo_pedido = ?";
+  return await connection.query(sql, [id]);
+};
+
+module.exports = {
+  crear,
+  obtenerTodos,
+  obtenerPorId,
+  actualizar,
+  eliminar,
+};

@@ -11,145 +11,132 @@ const ERROR_MESSAGES = {
 
 const handleError = (res, status, message, error = null) => {
   console.error(message, error);
-  res.status(status).json({ message });
+  return res.status(status).json({ message });
 };
 
 const validateFields = (fields) => {
   return Object.values(fields).every(
-    (field) => field !== undefined && field !== null
+    (field) => field !== undefined && field !== null && field !== ""
   );
 };
 
+// 🟩 Crear equipo
 const crearEquipo = async (req, res) => {
   const {
-    idTipoEquipo,
-    modeloEquipo,
-    marcaEquipo,
-    especificacionesEquipo,
-    estadoEquipo,
-    fechaCompraEquipo,
+    id_tipo_equipo,
+    modelo_equipo,
+    marca_equipo,
+    especificaciones_equipo,
+    estado_equipo,
+    fecha_compra_equipo,
   } = req.body;
 
-
-  const fields = {
-    idTipoEquipo,
-    modeloEquipo,
-    marcaEquipo,
-    especificacionesEquipo,
-    estadoEquipo,
-    fechaCompraEquipo,
+  const campos = {
+    id_tipo_equipo,
+    modelo_equipo,
+    marca_equipo,
+    especificaciones_equipo,
+    estado_equipo,
+    fecha_compra_equipo,
   };
 
-  if (!validateFields(fields)) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
+  if (!validateFields(campos)) {
+    return handleError(res, 400, ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   try {
-    const equipoNuevo = await Equipo.crear(fields);
-    res.status(201).json({
+    const equipoNuevo = await Equipo.crear(campos);
+    return res.status(201).json({
       message: "El equipo se creó con éxito",
       equipoId: equipoNuevo.insertId,
     });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
   }
 };
 
-const consultarEquipo = async (req, res) => {
+// 🟦 Consultar todos los equipos
+const consultarEquipo = async (_req, res) => {
   try {
     const equipos = await Equipo.obtenerTodos();
-    res.status(200).json(equipos);
+    return res.status(200).json(equipos);
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
+// 🟨 Actualizar equipo
 const actualizarEquipo = async (req, res) => {
-  const idEquipo = req.params.id;
-
-  console.log("ID RECIBIDO: ", idEquipo);
+  const id_equipo = req.params.id;
 
   const {
-    idTipoEquipo,
-    modeloEquipo,
-    marcaEquipo,
-    especificacionesEquipo,
-    estadoEquipo,
-    fechaCompraEquipo,
+    id_tipo_equipo,
+    modelo_equipo,
+    marca_equipo,
+    especificaciones_equipo,
+    estado_equipo,
+    fecha_compra_equipo,
   } = req.body;
 
-  const fields = {
-    idTipoEquipo,
-    modeloEquipo,
-    marcaEquipo,
-    especificacionesEquipo,
-    estadoEquipo,
-    fechaCompraEquipo,
+  const campos = {
+    id_tipo_equipo,
+    modelo_equipo,
+    marca_equipo,
+    especificaciones_equipo,
+    estado_equipo,
+    fecha_compra_equipo,
   };
 
   try {
-    // Obtener el equipo actual desde la base de datos
-    const equipoExistente = await Equipo.obtenerPorId(idEquipo);
+    const existente = await Equipo.obtenerPorId(id_equipo);
 
-    // Si no existe el equipo, retornar error
-    if (!equipoExistente || equipoExistente.length === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.EQUIPMENT_NOT_FOUND });
+    if (!existente || existente.length === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.EQUIPMENT_NOT_FOUND);
     }
 
-    // Filtrar solo los campos modificados
     const camposModificados = {};
-    Object.keys(fields).forEach((key) => {
-      if (fields[key] !== equipoExistente[0][key]) {
-        camposModificados[key] = fields[key];
+    for (const key in campos) {
+      if (campos[key] !== existente[0][key]) {
+        camposModificados[key] = campos[key];
       }
-    });
+    }
 
-    // Si no hay campos modificados, retornar mensaje de sin cambios
     if (Object.keys(camposModificados).length === 0) {
       return res
         .status(200)
         .json({ message: "No se realizaron cambios en el equipo." });
     }
 
-    // Actualizar solo los campos modificados
-    const equipoActualizado = await Equipo.actualizar(
-      idEquipo,
-      camposModificados
-    );
+    const resultado = await Equipo.actualizar(id_equipo, camposModificados);
 
-    if (equipoActualizado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.EQUIPMENT_NOT_FOUND });
+    if (resultado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.EQUIPMENT_NOT_FOUND);
     }
 
-    res.status(200).json({ message: "Equipo actualizado con éxito." });
+    return res.status(200).json({ message: "Equipo actualizado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
+// 🟥 Eliminar equipo
 const eliminarEquipo = async (req, res) => {
-  const idEquipo = req.params.id;
-  console.log(idEquipo);
-  if (!idEquipo) {
-    return res.status(400).json({ message: "El ID del equipo es requerido." });
+  const id_equipo = req.params.id;
+
+  if (!id_equipo) {
+    return handleError(res, 400, "El ID del equipo es requerido.");
   }
 
   try {
-    const equipoEliminado = await Equipo.eliminar(idEquipo);
+    const resultado = await Equipo.eliminar(id_equipo);
 
-    if (equipoEliminado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.EQUIPMENT_NOT_FOUND });
+    if (resultado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.EQUIPMENT_NOT_FOUND);
     }
 
-    res.status(200).json({ message: "Equipo eliminado con éxito." });
+    return res.status(200).json({ message: "Equipo eliminado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
   }
 };
 

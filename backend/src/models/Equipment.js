@@ -45,27 +45,14 @@ const Equipo = {
     return equipo;
   },
 
-  // Actualizar un equipo
   async actualizar(id, fields) {
-    const query = `
-      UPDATE 
-        equipos 
-      SET 
-        id_tipo_equipo = ?, 
-        modelo_equipo = ?, 
-        marca_equipo = ?, 
-        especificaciones_equipo = ?, 
-        estado_equipo = ?, 
-        fecha_compra_equipo = ?
-      WHERE 
-        id_equipo = ?
-    `;
+    const keys = Object.keys(fields);
+    const values = Object.values(fields);
 
-    // Verifica los valores finales que se usarán en la consulta SQL
-    console.log("Query a ejecutar:", query);
-    console.log("Valores para la query:", [...Object.values(fields), id]);
+    const setClause = keys.map((key) => `${key} = ?`).join(", ");
+    const query = `UPDATE equipos SET ${setClause} WHERE id_equipo = ?`;
 
-    const [result] = await pool.query(query, [...Object.values(fields), id]);
+    const [result] = await pool.query(query, [...values, id]);
     return result;
   },
 
