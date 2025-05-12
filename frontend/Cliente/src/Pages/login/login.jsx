@@ -9,72 +9,91 @@ export default function LoginRegister() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [name, setName] = useState(""); // Solo para registro
+    const [telefono, setTelefono] = useState(""); // ✅ Teléfono
+    const [cargo, setCargo] = useState("");       // ✅ Cargo
+    const [estadoUsuario, setEstadoUsuario] = useState("activo"); // ✅ Estado (por defecto "activo")
 
+    // ✅ Cambiar entre Login y Registro
     const toggleForm = () => {
         setIsRegister(!isRegister);
     };
 
+    // ✅ Mostrar/Ocultar Contraseña
     const togglePassword = () => {
         setShowPassword(!showPassword);
     };
 
-    // ✅ Función para manejar el inicio de sesión
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch("http://localhost:5000/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include", // ✅ Necesario para recibir la cookie del JWT
-                body: JSON.stringify({
-                    correoUsuario: email,
-                    contraseñaUsuario: password,
-                }),
-            });
+   // ✅ En tu LoginRegister.js (React)
+const handleLogin = async () => {
+    if (!email || !password) {
+        alert("Correo y contraseña son requeridos");
+        return;
+    }
 
-            const data = await response.json();
-            if (response.ok) {
-                alert("Inicio de sesión exitoso");
-                console.log("Usuario logeado:", data);
-                // Aquí puedes redirigir al dashboard o alguna otra ruta
-            } else {
-                alert(data.message);
-            }
-        } catch (error) {
-            console.error("Error al iniciar sesión:", error);
+    try {
+        const response = await fetch("http://localhost:4000/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include", // ✅ Permitir las cookies
+            body: JSON.stringify({
+                correo_usuario: email,
+                contraseña_usuario: password
+            }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert("Inicio de sesión exitoso");
+            console.log("Usuario autenticado:", data);
+            window.location.href = "/MenuPrincipal"; // Redirigir a perfil
+        } else {
+            alert(data.message);
         }
-    };
+    } catch (error) {
+        console.error("Error al iniciar sesión:", error);
+        alert("Error al iniciar sesión");
+    }
+};
 
-    // ✅ Función para manejar el registro
-    const handleRegister = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch("http://localhost:5000/api/auth/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    nombreUsuario: name,
-                    correoUsuario: email,
-                    contraseñaUsuario: password,
-                }),
-            });
+// En tu LoginRegister.js
+const handleRegister = async (e) => {
+    e.preventDefault();
+    
+    if (!name || !email || !password || !telefono || !cargo) {
+        alert("Todos los campos son obligatorios");
+        return;
+    }
 
-            const data = await response.json();
-            if (response.ok) {
-                alert("Registro exitoso");
-                console.log("Usuario registrado:", data);
-                setIsRegister(false);
-            } else {
-                alert(data.message);
-            }
-        } catch (error) {
-            console.error("Error al registrar:", error);
+    try {
+        const response = await fetch("http://localhost:4000/api/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                nombre_usuario: name,
+                correo_usuario: email,
+                contraseña_usuario: password,
+                telefono_usuario: telefono,
+                cargo_usuario: cargo,
+                estado_usuario: "activo"
+            }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            alert("Registro exitoso");
+            setIsRegister(false);
+        } else {
+            alert(data.message);
         }
-    };
+    } catch (error) {
+        console.error("Error al registrar:", error);
+    }
+};
+
 
     return (
         <div className="d-flex justify-content-center align-items-center vh-100 position-relative bg-light">
@@ -93,10 +112,34 @@ export default function LoginRegister() {
                 {isRegister ? (
                     <div>
                         <h3 className="text-center">Registrarme</h3>
-                        <input type="text" placeholder="Nombre" className="form-control mb-2" 
-                            value={name} onChange={(e) => setName(e.target.value)} />
-                        <input type="email" placeholder="Email" className="form-control mb-2" 
-                            value={email} onChange={(e) => setEmail(e.target.value)} />
+                        <input 
+                            type="text" 
+                            placeholder="Nombre" 
+                            className="form-control mb-2" 
+                            value={name} 
+                            onChange={(e) => setName(e.target.value)} 
+                        />
+                        <input 
+                            type="email" 
+                            placeholder="Email" 
+                            className="form-control mb-2" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                        />
+                        <input 
+                            type="text" 
+                            placeholder="Teléfono" 
+                            className="form-control mb-2" 
+                            value={telefono} 
+                            onChange={(e) => setTelefono(e.target.value)} 
+                        />
+                        <input 
+                            type="text" 
+                            placeholder="Cargo" 
+                            className="form-control mb-2" 
+                            value={cargo} 
+                            onChange={(e) => setCargo(e.target.value)} 
+                        />
                         <div className="input-group mb-3">
                             <input 
                                 type={showPassword ? "text" : "password"} 
