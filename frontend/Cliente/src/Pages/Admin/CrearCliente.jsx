@@ -2,6 +2,7 @@ import Axios from "axios";
 import { useForm } from "react-hook-form";
 import NavBar from "../../components/Navbar";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function CrearCliente() {
     const { register, handleSubmit, formState: { errors }, reset } = useForm();
@@ -26,6 +27,8 @@ export default function CrearCliente() {
             });
     };
 
+    const navigate = useNavigate();
+
     return (
         <div className="min-vh-100 d-flex flex-column bg-secondary">
             <NavBar />
@@ -33,7 +36,7 @@ export default function CrearCliente() {
                 <div className="col-11 col-sm-10 col-md-8 col-lg-6 col-xl-5 bg-white rounded card shadow p-4 m-4">
                     <div className="row my-4 gx-5">
                         <div className="col-12 d-flex justify-content-between align-items-center mb-3">
-                            <button className="btn btn-primary btn-sm">← Regresar</button>
+                            <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
                             <h1 className="text-center w-100 mb-0">Crear cliente</h1>
                         </div>
                     </div>

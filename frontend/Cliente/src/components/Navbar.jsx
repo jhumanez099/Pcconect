@@ -11,19 +11,19 @@ export default function NavBar() {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             <li className="nav-item">
-              <a className="nav-link" href="/menuClientes">Clientes</a>
+              <a className="nav-link" href="/MenuClientes">Clientes</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="/menuUsuarios">Usuarios</a>
+              <a className="nav-link" href="/MenuUsuarios">Usuarios</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="/menuPedidos">Pedidos</a>
+              <a className="nav-link" href="/MenuPedidos">Pedidos</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="/menuEquipos">Equipos</a>
+              <a className="nav-link" href="/MenuEquipos">Equipos</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="/soporte">Soporte</a>
+              <a className="nav-link" href="/Soporte">Soporte</a>
             </li>
           </ul>
         </div>

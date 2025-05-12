@@ -21,9 +21,8 @@ const validateFields = (fields) => {
 };
 
 const crearEquipo = async (req, res) => {
-  console.log(req.body.fechaCompraEquipo);
   const {
-    nombreTipoEquipo,
+    idTipoEquipo,
     modeloEquipo,
     marcaEquipo,
     especificacionesEquipo,
@@ -31,8 +30,9 @@ const crearEquipo = async (req, res) => {
     fechaCompraEquipo,
   } = req.body;
 
+
   const fields = {
-    nombreTipoEquipo,
+    idTipoEquipo,
     modeloEquipo,
     marcaEquipo,
     especificacionesEquipo,
@@ -70,17 +70,19 @@ const actualizarEquipo = async (req, res) => {
   console.log("ID RECIBIDO: ", idEquipo);
 
   const {
-    nombreTipoEquipo,
+    idTipoEquipo,
     modeloEquipo,
     marcaEquipo,
+    especificacionesEquipo,
     estadoEquipo,
     fechaCompraEquipo,
   } = req.body;
 
   const fields = {
-    nombreTipoEquipo,
+    idTipoEquipo,
     modeloEquipo,
     marcaEquipo,
+    especificacionesEquipo,
     estadoEquipo,
     fechaCompraEquipo,
   };

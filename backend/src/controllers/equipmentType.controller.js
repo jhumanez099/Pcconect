@@ -22,18 +22,19 @@ const validateFields = (fields) => {
 };
 
 const crearTipoEquipo = async (req, res) => {
-  const { nombreTipoEquipo } = req.body;
+  const fields = {
+    nombre_tipo_equipo: req.body.nombre_tipo_equipo,
+  };
 
-  if (!validateFields({ nombreTipoEquipo })) {
+  if (!validateFields(fields)) {
     return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
   }
 
   try {
-    const tipoEquipoNuevo = await TipoEquipo.crear(nombreTipoEquipo);
-
+    const nuevoTipo = await TipoEquipo.crear(fields);
     res.status(201).json({
-      message: "El tipo de equipo se creó con éxito",
-      tipoEquipoId: tipoEquipoNuevo.insertId,
+      message: "Tipo de equipo creado con éxito",
+      tipoEquipoId: nuevoTipo.insertId,
     });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
@@ -51,78 +52,58 @@ const crearTipoEquipo = async (req, res) => {
 
 const consultarTipoEquipo = async (req, res) => {
   try {
-    const tiposEquipos = await TipoEquipo.obtenerTodos();
-    res.status(200).json(tiposEquipos);
+    const tipos = await TipoEquipo.obtenerTodos();
+    res.status(200).json(tipos);
   } catch (error) {
     handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
 const actualizarTipoEquipo = async (req, res) => {
-  const idTipoEquipo = req.params.id;
-  const { nombreTipoEquipo } = req.body;
+  const id = req.params.id;
+  const fields = {
+    nombre_tipo_equipo: req.body.nombre_tipo_equipo,
+  };
 
   try {
-    // Obtener el tipo equipo actual desde la base de datos
-    const tipoEquipoExistente = await TipoEquipo.obtenerPorId(idTipoEquipo);
+    const existente = await TipoEquipo.obtenerPorId(id);
 
-    // Si no existe el tipo equipo, retornar error
-    if (!tipoEquipoExistente || tipoEquipoExistente.length === 0) {
+    if (!existente || existente.length === 0) {
       return res
         .status(404)
         .json({ message: ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND });
     }
 
-    // Filtrar solo los campos modificados
-    const camposModificados = {};
-
-    // Comprobar si el nombre del tipo equipo ha cambiado
-    if (
-      nombreTipoEquipo &&
-      nombreTipoEquipo !== tipoEquipoExistente[0].nombreTipoEquipo
-    ) {
-      camposModificados.nombreTipoEquipo = nombreTipoEquipo; // Solo agregar los campos que cambian
+    const cambios = {};
+    if (fields.nombre_tipo_equipo !== existente[0].nombre_tipo_equipo) {
+      cambios.nombre_tipo_equipo = fields.nombre_tipo_equipo;
     }
 
-    // Si no hay campos modificados, retornar mensaje de sin cambios
-    if (Object.keys(camposModificados).length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No se realizaron cambios en el tipo de equipo." });
+    if (Object.keys(cambios).length === 0) {
+      return res.status(200).json({ message: "No se realizaron cambios." });
     }
 
-    // Actualizar solo los campos modificados
-    const tipoEquipoActualizado = await TipoEquipo.actualizar(
-      idTipoEquipo,
-      camposModificados
-    );
+    const actualizado = await TipoEquipo.actualizar(id, cambios);
 
-    if (tipoEquipoActualizado.affectedRows === 0) {
+    if (actualizado.affectedRows === 0) {
       return res
         .status(404)
         .json({ message: ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND });
     }
 
-    res.status(200).json({ message: "Tipo del equipo actualizado con éxito." });
+    res.status(200).json({ message: "Tipo de equipo actualizado con éxito." });
   } catch (error) {
     handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
-
 const eliminarTipoEquipo = async (req, res) => {
-  const idTipoEquipo = req.params.id;
-
-  if (!idTipoEquipo) {
-    return res
-      .status(400)
-      .json({ message: "El ID del tipo de equipo es requerido." });
-  }
+  const id = req.params.id;
 
   try {
-    const tipoEquipoEliminado = await TipoEquipo.eliminar(idTipoEquipo);
+    const eliminado = await TipoEquipo.eliminar(id);
 
-    if (tipoEquipoEliminado.affectedRows === 0) {
+    if (eliminado.affectedRows === 0) {
       return res
         .status(404)
         .json({ message: ERROR_MESSAGES.EQUIPMENT_TYPE_NOT_FOUND });

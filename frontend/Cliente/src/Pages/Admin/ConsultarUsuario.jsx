@@ -3,6 +3,7 @@ import NavBar from "../../components/Navbar";
 import Modal from "react-modal";
 import PropTypes from "prop-types";
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 function UsuarioRow({ usuario, onEditar, onEliminar }) {
   return (
@@ -116,6 +117,8 @@ export default function ConsultarUsuario() {
     obtenerTiposUsuario();
   }, []);
 
+  const navigate = useNavigate();
+
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
       <NavBar />
@@ -123,7 +126,7 @@ export default function ConsultarUsuario() {
         <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 bg-white rounded card shadow p-4 m-4">
           <div className="row gx-5">
             <div className="col-12 d-flex justify-content-between align-items-center mb-3">
-              <button className="btn btn-primary btn-sm">← Regresar</button>
+              <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
               <h1 className="text-center w-100 mb-0">Consultar usuarios</h1>
             </div>
           </div>

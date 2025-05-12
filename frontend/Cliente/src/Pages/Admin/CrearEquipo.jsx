@@ -4,31 +4,68 @@ import NavBar from "../../components/Navbar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function CrearUsuario() {
+export default function CrearEquipo() {
   const { register, handleSubmit, formState: { errors }, reset } = useForm();
   const [globalError, setGlobalError] = useState(null);
-  const [tiposUsuario, setTiposUsuario] = useState([]);
 
   const onSubmit = (data) => {
-    Axios.post("http://localhost:3000/api/usuarios", data)
+    CrearEquipo(data);
+  };
+
+  const CrearEquipo = (equipoData) => {
+    Axios.post("http://localhost:3000/api/equipos", equipoData)
       .then(() => {
         reset();
         setGlobalError(null);
       })
       .catch((error) => {
-        const msg = error.response?.data?.message || "Error al crear el usuario.";
-        setGlobalError(msg);
+        const errorMessage =
+          error.response && error.response.data && error.response.data.message
+            ? error.response.data.message
+            : "Error al crear el equipo. Intenta nuevamente.";
+        setGlobalError(errorMessage);
       });
   };
 
-  const obtenerTiposUsuario = () => {
-    Axios.get("http://localhost:3000/api/tiposUsuarios")
-      .then(res => setTiposUsuario(res.data))
-      .catch(err => console.error("Error cargando tipos de usuario:", err));
+  const [tipoEquipo, setTipoEquipo] = useState([]);
+
+  const ConsultarTipoEquipo = () => {
+    Axios.get("http://localhost:3000/api/tiposEquipos")
+      .then((response) => {
+        setTipoEquipo(response.data);
+      })
+      .catch((error) => {
+        console.error("Error en la consulta los tipos de equipo:", error);
+      });
   };
 
+  const campos = [
+    {
+      label: "Tipo de equipo",
+      id: "idTipoEquipo",
+      type: "select",
+      options: tipoEquipo.map((tipo) => ({
+        value: tipo.id_tipo_equipo,
+        label: tipo.nombre_tipo_equipo,
+      })),
+    },
+    { label: "Modelo", id: "modeloEquipo", type: "text" },
+    { label: "Marca", id: "marcaEquipo", type: "text" },
+    { label: "Especificaciones", id: "especificacionesEquipo", type: "text" },
+    {
+      label: "Estado",
+      id: "estadoEquipo",
+      type: "select",
+      options: [
+        { value: "Activo", label: "Activo" },
+        { value: "Inactivo", label: "Inactivo" },
+      ],
+    },
+    { label: "Fecha de compra", id: "fechaCompraEquipo", type: "date" },
+  ];
+
   useEffect(() => {
-    obtenerTiposUsuario();
+    ConsultarTipoEquipo();
   }, []);
 
   const navigate = useNavigate();
@@ -41,23 +78,20 @@ export default function CrearUsuario() {
           <div className="row my-4 gx-5">
             <div className="col-12 d-flex justify-content-between align-items-center mb-3">
               <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
-              <h1 className="text-center w-100 mb-0">Crear Usuario</h1>
+              <h1 className="text-center w-100 mb-0">Crear equipo</h1>
             </div>
           </div>
 
           {globalError && <div className="alert alert-danger">{globalError}</div>}
 
           <form onSubmit={handleSubmit(onSubmit)} className="px-3">
-            {[
-              { label: "Nombre", id: "nombre_usuario", type: "text" },
-              { label: "Correo", id: "correo_usuario", type: "email" },
-              { label: "Contraseña", id: "contraseña_usuario", type: "password" },
-              { label: "Teléfono", id: "telefono_usuario", type: "text" },
-              { label: "Cargo", id: "cargo_usuario", type: "text" },
-              { label: "Estado", id: "estado_usuario", type: "select", options: ["Activo", "Inactivo"] },
-            ].map((field, index) => (
+            {campos.map((field, index) => (
               <div className="mb-4 row align-items-center" key={index}>
-                <label htmlFor={field.id} className="col-sm-4 col-form-label text-end">
+                <label
+                  htmlFor={field.id}
+                  className="col-sm-4 col-form-label text-end"
+                  aria-invalid={errors[field.id] ? "true" : "false"}
+                >
                   {field.label}:
                 </label>
                 <div className="col-sm-8">
@@ -69,7 +103,9 @@ export default function CrearUsuario() {
                     >
                       <option value="">Seleccione...</option>
                       {field.options.map((option, idx) => (
-                        <option key={idx} value={option}>{option}</option>
+                        <option key={idx} value={option.value}>
+                          {option.label}
+                        </option>
                       ))}
                     </select>
                   ) : (
@@ -80,35 +116,12 @@ export default function CrearUsuario() {
                       {...register(field.id, { required: `${field.label} es obligatorio` })}
                     />
                   )}
-                  {errors[field.id] && <div className="invalid-feedback">{errors[field.id].message}</div>}
+                  {errors[field.id] && (
+                    <div className="invalid-feedback">{errors[field.id].message}</div>
+                  )}
                 </div>
               </div>
             ))}
-
-            {/* Campo especial para el tipo de usuario */}
-            <div className="mb-4 row align-items-center">
-              <label htmlFor="id_tipo_usuario" className="col-sm-4 col-form-label text-end">
-                Tipo de Usuario:
-              </label>
-              <div className="col-sm-8">
-                <select
-                  className={`form-control ${errors.id_tipo_usuario ? "is-invalid" : ""}`}
-                  id="id_tipo_usuario"
-                  {...register("id_tipo_usuario", { required: "Tipo de usuario es obligatorio" })}
-                >
-                  <option value="">Seleccione...</option>
-                  {tiposUsuario.map((tipo) => (
-                    <option key={tipo.id_tipo_usuario} value={tipo.id_tipo_usuario}>
-                      {tipo.nombre_tipo_usuario}
-                    </option>
-                  ))}
-                </select>
-                {errors.id_tipo_usuario && (
-                  <div className="invalid-feedback">{errors.id_tipo_usuario.message}</div>
-                )}
-              </div>
-            </div>
-
             <div className="text-center">
               <button type="submit" className="btn btn-success px-4 py-2">
                 Crear
