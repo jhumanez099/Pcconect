@@ -1,132 +1,121 @@
-const Usuario = require("../models/User.js");
+// src/controllers/auth.controller.js
 const bcrypt = require("bcryptjs");
-const crearToken = require("../libs/jwt.js")
+const jwt = require("jsonwebtoken");
+const Usuario = require("../models/User.js");
 
+// ✅ Registro de Usuarios (Siempre como Auxiliar de pedidos)
+const register = async (req, res) => {
+  const { 
+    nombre_usuario, 
+    correo_usuario, 
+    contraseña_usuario,
+    telefono_usuario,
+    cargo_usuario,
+    estado_usuario 
+  } = req.body;
 
-const ERROR_MESSAGES = {
-  REQUIRED_FIELDS: "Todos los campos son obligatorios.",
-  USER_NOT_FOUND: "Usuario no encontrado.",
-  REGISTER_ERROR: "Error al registrar el usuario.",
-  LOGIN_ERROR: "Error al logear el usuario",
-  RETRIEVAL_ERROR: "Error al consultar el usuario.",
-  UPDATE_ERROR: "Error al actualizar el usuario.",
-  DELETE_ERROR: "Error al eliminar el usuario.",
-};
-
-const handleError = (res, status, message, error = null) => {
-  console.error(message, error);
-  res.status(status).json({ message, error: error?.message });
-};
-
-const validateFields = (fields) => {
-  return Object.values(fields).every(
-    (field) => field !== undefined && field !== null && field !== ""
-  );
-};
-
-const  register = async (req, res) => {
-  const fields = {
-    idTipoUsuario: req.body.idTipoUsuario,
-    nombreUsuario: req.body.nombreUsuario,
-    correoUsuario: req.body.correoUsuario,
-    contraseñaUsuario: req.body.contraseñaUsuario,
-    telefonoUsuario: req.body.telefonoUsuario,
-    cargoUsuario: req.body.cargoUsuario,
-    estadoUsuario: req.body.estadoUsuario,
-  };
-
-  if (!validateFields(fields)) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
+  // ✅ Validar que los campos son obligatorios
+  if (!nombre_usuario || !correo_usuario || !contraseña_usuario || !telefono_usuario || !cargo_usuario) {
+    return res.status(400).json({ message: "Todos los campos son obligatorios." });
   }
 
   try {
-    const contraseñaEncriptada = await bcrypt.hash(
-      fields.contraseñaUsuario,
-      10
-    );
-
-    fields.contraseñaUsuario = contraseñaEncriptada;
-
-    const usuarioNuevo = await Usuario.crear(fields);
-
-    // Generar el token JWT
-    const token = crearToken({
-      id: usuarioNuevo.insertId,
-      nombre: fields.nombreUsuario,
-    });
-
-    // Configurar la cookie
-    res.cookie("token", token, {
-      httpOnly: true, // Previene el acceso desde JavaScript
-      secure: process.env.NODE_ENV,
-      maxAge: process.env.TOKEN_EXPIRATION,
-      sameSite: "Strict", // Previene ataques CSRF
-    });
-
-    res.status(201).json({
-      message: "Usuario registrado con éxito",
-      usuarioId: usuarioNuevo.insertId,
-    });
-  } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.REGISTER_ERROR, error);
-  }
-};
-
-const login = async (req, res) => {
-  const fields = {
-    correoUsuario: req.body.correoUsuario,
-    contraseñaUsuario: req.body.contraseñaUsuario,
-  };
-
-  if (!validateFields(fields)) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
-  }
-
-  try {
-    const usuario = await Usuario.obtenerPorCorreo(fields.correoUsuario);
-
-    if (!usuario) {
-      return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
+    // ✅ Verificar si el usuario ya existe
+    const usuarioExistente = await Usuario.obtenerPorCorreo(correo_usuario);
+    if (usuarioExistente) {
+      return res.status(400).json({ message: "El correo ya está registrado." });
     }
 
-    // Comparar la contraseña ingresada con la contraseña encriptada almacenada
-    const contraseñaCorrecta = await bcrypt.compare(
-      fields.contraseñaUsuario,
-      usuario.contraseñaUsuario
-    );
+    // ✅ Encriptar la contraseña
+    const contraseñaEncriptada = await bcrypt.hash(contraseña_usuario, 10);
 
+    // ✅ Crear el usuario siempre como "Auxiliar de pedidos"
+    const nuevoUsuario = await Usuario.crear({
+      id_tipo_usuario: 12, // ✅ Siempre será "Auxiliar de pedidos"
+      nombre_usuario,
+      correo_usuario,
+      contraseña_usuario: contraseñaEncriptada,
+      telefono_usuario,
+      cargo_usuario,
+      estado_usuario: estado_usuario || "activo"
+    });
+
+    res.status(201).json({ 
+      message: "Usuario registrado con éxito", 
+      usuarioId: nuevoUsuario.insertId 
+    });
+  } catch (error) {
+    console.error("Error en el registro:", error);
+    res.status(500).json({ message: "Error al registrar el usuario" });
+  }
+};
+
+// ✅ Login de Usuarios (Sin cambios)
+// ✅ Login de Usuarios (Mejorado)
+const login = async (req, res) => {
+  const { correo_usuario, contraseña_usuario } = req.body;
+
+  // ✅ Verificar que los campos están presentes
+  if (!correo_usuario || !contraseña_usuario) {
+    return res.status(400).json({ message: "Correo y contraseña son requeridos." });
+  }
+
+  try {
+    // ✅ Verificar si el usuario existe
+    const usuario = await Usuario.obtenerPorCorreo(correo_usuario);
+    if (!usuario) {
+      return res.status(404).json({ message: "Usuario no encontrado." });
+    }
+
+    // ✅ Verificar la contraseña encriptada
+    const contraseñaCorrecta = await bcrypt.compare(contraseña_usuario, usuario.contraseña_usuario);
     if (!contraseñaCorrecta) {
       return res.status(401).json({ message: "Contraseña incorrecta." });
     }
 
-    // Generar el token JWT si la autenticación fue exitosa
-    const token = crearToken({
-      id: usuario.idUsuario,
-      nombre: usuario.nombreUsuario,
-    });
+    // ✅ Generar el token JWT
+    const token = jwt.sign(
+      {
+        id: usuario.id_usuario,
+        nombre: usuario.nombre_usuario,
+        id_tipo_usuario: usuario.id_tipo_usuario,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
-    // Configurar la cookie del token
+    // ✅ Configurar la cookie del token
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: process.env.TOKEN_EXPIRATION,
-      sameSite: "Strict",
+      maxAge: 24 * 60 * 60 * 1000, // 1 día de duración
+      sameSite: "Lax",
     });
 
-    res.status(200).json({ message: "Usuario logeado con éxito" });
+    res.status(200).json({ 
+      message: "Usuario autenticado correctamente", 
+      usuario: {
+        id: usuario.id_usuario,
+        nombre: usuario.nombre_usuario,
+        correo: usuario.correo_usuario,
+        tipo: usuario.id_tipo_usuario
+      }
+    });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.LOGIN_ERROR, error);
+    console.error("Error al iniciar sesión:", error);
+    res.status(500).json({ message: "Error al iniciar sesión" });
   }
 };
 
-
+// ✅ Logout (Cerrar Sesión)
 const logout = (req, res) => {
-  res.clearCookie("token"); // Esto eliminará la cookie
+  res.clearCookie("token");
   res.status(200).json({ message: "Usuario desconectado con éxito." });
 };
 
+// ✅ Exportar las funciones
 module.exports = {
   register,
   login,
-  logout
+  logout,
 };

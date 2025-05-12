@@ -1,6 +1,8 @@
+// src/models/User.js
 const pool = require("../config/db.js");
 
 const Usuario = {
+  // ✅ Crear un nuevo usuario
   async crear(fields) {
     const query = `
       INSERT INTO usuarios (
@@ -8,37 +10,46 @@ const Usuario = {
         telefono_usuario, cargo_usuario, estado_usuario
       ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    const [result] = await pool.query(query, Object.values(fields));
-    return result;
+    const [result] = await pool.query(query, [
+      fields.id_tipo_usuario,
+      fields.nombre_usuario,
+      fields.correo_usuario,
+      fields.contraseña_usuario,
+      fields.telefono_usuario,
+      fields.cargo_usuario,
+      fields.estado_usuario
+    ]);
+
+    return { insertId: result.insertId };
   },
 
-  async obtenerTodos() {
+ // ✅ Obtener usuario por correo (para login)
+  async obtenerPorCorreo(correo_usuario) {
     const query = `
-      SELECT u.*, tu.nombre_tipo_usuario
-      FROM usuarios u
-      JOIN tipo_usuario tu ON u.id_tipo_usuario = tu.id_tipo_usuario
+      SELECT * FROM usuarios 
+      WHERE correo_usuario = ?
+      LIMIT 1
     `;
-    const [usuarios] = await pool.query(query);
-    return usuarios;
+    const [usuario] = await pool.query(query, [correo_usuario]);
+    return usuario.length > 0 ? usuario[0] : null;
   },
 
+  // ✅ Obtener usuario por ID
   async obtenerPorId(id) {
     const query = `
-      SELECT u.*, tu.nombre_tipo_usuario
-      FROM usuarios u
-      JOIN tipo_usuario tu ON u.id_tipo_usuario = tu.id_tipo_usuario
-      WHERE u.id_usuario = ?
+      SELECT * FROM usuarios 
+      WHERE id_usuario = ?
       LIMIT 1
     `;
     const [usuario] = await pool.query(query, [id]);
-    return usuario;
+    return usuario.length > 0 ? usuario[0] : null;
   },
 
+  // ✅ Actualizar usuario (opcional)
   async actualizar(id, fields) {
     const query = `
       UPDATE usuarios
       SET 
-        id_tipo_usuario = ?, 
         nombre_usuario = ?, 
         correo_usuario = ?, 
         contraseña_usuario = ?, 
@@ -47,9 +58,7 @@ const Usuario = {
         estado_usuario = ?
       WHERE id_usuario = ?
     `;
-  
     const valores = [
-      fields.id_tipo_usuario,
       fields.nombre_usuario,
       fields.correo_usuario,
       fields.contraseña_usuario,
@@ -58,18 +67,20 @@ const Usuario = {
       fields.estado_usuario,
       id
     ];
-  
+
     const [result] = await pool.query(query, valores);
     return result;
   },
 
+  // ✅ Eliminar usuario (opcional)
   async eliminar(id) {
-    const [result] = await pool.query(
-      "DELETE FROM usuarios WHERE id_usuario = ?",
-      [id]
-    );
+    const query = `
+      DELETE FROM usuarios 
+      WHERE id_usuario = ?
+    `;
+    const [result] = await pool.query(query, [id]);
     return result;
-  },
+  }
 };
 
 module.exports = Usuario;

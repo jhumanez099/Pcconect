@@ -3,6 +3,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const authMiddleware = require("./middlewares/auth.middleware"); // ✅ Importar el middleware
 
 // Importamos las rutas
 const clienteRoutes = require("./routes/client.routes.js");
@@ -21,18 +22,22 @@ const app = express();
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(cookieParser());
-
-// ✅ Configuración de CORS (Permitir Cookies)
 app.use(
   cors({
-    origin: "http://localhost:3000", // Cambia esto al dominio de tu frontend
-    credentials: true, // ✅ Permitir el envío de cookies
+    origin: "http://localhost:5173", // ✅ El dominio de tu frontend
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ Configurar las Rutas
+// ✅ Configurar las Rutas de Autenticación (Públicas)
+app.use('/api/auth', authRoutes); // Registro y Login son públicos
+
+// ✅ Configurar las Rutas Protegidas (Requieren Autenticación)
+app.use('/api', authMiddleware); // ✅ Aplicar el middleware de autenticación
+
+// ✅ Rutas protegidas
 app.use('/api', clienteRoutes);
 app.use('/api', tipoEquipoRoutes);
 app.use('/api', equipoRoutes);
@@ -41,7 +46,6 @@ app.use('/api', tipoUsuarioRoutes);
 app.use('/api', usuarioRoutes);
 app.use('/api', pedidoRoutes);
 app.use('/api', detallePedidoRoutes);
-app.use('/api', authRoutes);
 
 // ✅ Manejo de errores (opcional)
 app.use((err, req, res, next) => {
