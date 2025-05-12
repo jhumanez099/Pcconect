@@ -5,29 +5,43 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function CrearCliente() {
-    const { register, handleSubmit, formState: { errors }, reset } = useForm();
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        reset,
+    } = useForm();
+
     const [globalError, setGlobalError] = useState(null);
-
-    const onSubmit = (data) => {
-        crearCliente(data);
-    };
-
-    const crearCliente = (clienteData) => {
-        Axios.post("http://localhost:3000/api/clientes", clienteData)
-            .then(() => {
-                reset();
-                setGlobalError(null);
-            })
-            .catch((error) => {
-                const errorMessage =
-                    error.response && error.response.data && error.response.data.message
-                        ? error.response.data.message
-                        : "Error al crear el cliente. Intenta nuevamente.";
-                setGlobalError(errorMessage);
-            });
-    };
-
     const navigate = useNavigate();
+
+    const onSubmit = async (data) => {
+        try {
+            await Axios.post("http://localhost:3000/api/clientes", data);
+            reset();
+            setGlobalError(null);
+            alert("Cliente creado correctamente.");
+            // navigate("/admin/consultarCliente");
+        } catch (error) {
+            const errorMessage =
+                error.response?.data?.message || "Error al crear el cliente.";
+            setGlobalError(errorMessage);
+        }
+    };
+
+    const campos = [
+        { label: "Nombre", id: "nombre_cliente", type: "text" },
+        { label: "Dirección", id: "direccion_cliente", type: "text" },
+        { label: "Teléfono", id: "telefono_cliente", type: "text" },
+        { label: "Correo", id: "correo_cliente", type: "email" },
+        { label: "Responsable", id: "encargado_cliente", type: "text" },
+        {
+            label: "Estado",
+            id: "estado_cliente",
+            type: "select",
+            options: ["Activo", "Inactivo"],
+        },
+    ];
 
     return (
         <div className="min-vh-100 d-flex flex-column bg-secondary">
@@ -36,7 +50,9 @@ export default function CrearCliente() {
                 <div className="col-11 col-sm-10 col-md-8 col-lg-6 col-xl-5 bg-white rounded card shadow p-4 m-4">
                     <div className="row my-4 gx-5">
                         <div className="col-12 d-flex justify-content-between align-items-center mb-3">
-                            <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
+                            <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">
+                                ← Regresar
+                            </button>
                             <h1 className="text-center w-100 mb-0">Crear cliente</h1>
                         </div>
                     </div>
@@ -44,14 +60,7 @@ export default function CrearCliente() {
                     {globalError && <div className="alert alert-danger">{globalError}</div>}
 
                     <form onSubmit={handleSubmit(onSubmit)} className="px-3">
-                        {[
-                            { label: "Nombre", id: "nombreCliente", type: "text" },
-                            { label: "Dirección", id: "direccionCliente", type: "text" },
-                            { label: "Teléfono", id: "telefonoCliente", type: "text" },
-                            { label: "Correo", id: "correoCliente", type: "email" },
-                            { label: "Responsable", id: "encargadoCliente", type: "text" },
-                            { label: "Estado", id: "estadoCliente", type: "select", options: ["Activo", "Inactivo"] },
-                        ].map((field, index) => (
+                        {campos.map((field, index) => (
                             <div className="mb-4 row align-items-center" key={index}>
                                 <label
                                     htmlFor={field.id}
@@ -65,11 +74,15 @@ export default function CrearCliente() {
                                         <select
                                             className={`form-control ${errors[field.id] ? "is-invalid" : ""}`}
                                             id={field.id}
-                                            {...register(field.id, { required: `${field.label} es obligatorio` })}
+                                            {...register(field.id, {
+                                                required: `${field.label} es obligatorio`,
+                                            })}
                                         >
                                             <option value="">Seleccione...</option>
                                             {field.options.map((option, idx) => (
-                                                <option key={idx} value={option}>{option}</option>
+                                                <option key={idx} value={option}>
+                                                    {option}
+                                                </option>
                                             ))}
                                         </select>
                                     ) : (
@@ -77,11 +90,15 @@ export default function CrearCliente() {
                                             type={field.type}
                                             className={`form-control ${errors[field.id] ? "is-invalid" : ""}`}
                                             id={field.id}
-                                            {...register(field.id, { required: `${field.label} es obligatorio` })}
+                                            {...register(field.id, {
+                                                required: `${field.label} es obligatorio`,
+                                            })}
                                         />
                                     )}
                                     {errors[field.id] && (
-                                        <div className="invalid-feedback">{errors[field.id].message}</div>
+                                        <div className="invalid-feedback">
+                                            {errors[field.id].message}
+                                        </div>
                                     )}
                                 </div>
                             </div>

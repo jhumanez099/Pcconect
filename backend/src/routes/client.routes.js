@@ -1,6 +1,6 @@
 const express = require("express");
 const {
-  crearClientes,
+  crearCliente,
   consultarClientes,
   actualizarCliente,
   eliminarCliente,
@@ -8,18 +8,8 @@ const {
 
 const router = express.Router();
 
-// Rutas para la gestión de clientes
+router.route("/clientes").post(crearCliente).get(consultarClientes);
 
-// Crear un nuevo cliente
-router.post("/clientes", crearClientes);
-
-// Consultar todos los clientes
-router.get("/clientes", consultarClientes);
-
-// Actualizar un cliente específico por ID
-router.put("/clientes/:id", actualizarCliente);
-
-// Eliminar un cliente específico por ID
-router.delete("/clientes/:id", eliminarCliente);
+router.route("/clientes/:id").put(actualizarCliente).delete(eliminarCliente);
 
 module.exports = router;

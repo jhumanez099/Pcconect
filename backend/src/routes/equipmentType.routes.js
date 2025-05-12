@@ -8,12 +8,11 @@ const {
 
 const router = express.Router();
 
-// Rutas para la gestión de tipos de equipos
+router.route("/tiposEquipos").post(crearTipoEquipo).get(consultarTipoEquipo);
 
-router.post("/tiposEquipos", crearTipoEquipo);
-router.get("/tiposEquipos", consultarTipoEquipo);
-router.put("/tiposEquipos/:id", actualizarTipoEquipo);
-router.delete("/tiposEquipos/:id", eliminarTipoEquipo);
-
+router
+  .route("/tiposEquipos/:id")
+  .put(actualizarTipoEquipo)
+  .delete(eliminarTipoEquipo);
 
 module.exports = router;

@@ -8,24 +8,18 @@ import { useEffect, useState, useMemo } from "react";
 function ClienteRow({ cliente, onEliminar, onEditar }) {
   return (
     <tr>
-      <td className="text-truncate">{cliente.nombre_cliente}</td>
-      <td className="text-truncate">{cliente.direccion_cliente}</td>
+      <td>{cliente.nombre_cliente}</td>
+      <td>{cliente.direccion_cliente}</td>
       <td>{cliente.telefono_cliente}</td>
-      <td className="text-truncate">{cliente.correo_cliente}</td>
+      <td>{cliente.correo_cliente}</td>
       <td>{cliente.encargado_cliente}</td>
       <td>{cliente.estado_cliente}</td>
       <td>
-        <div className="d-flex flex-column align-items-center">
-          <button
-            className="btn btn-primary btn-sm mb-2 w-100"
-            onClick={() => onEditar(cliente)}
-          >
+        <div className="d-flex flex-column align-items-center gap-2">
+          <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(cliente)}>
             Editar
           </button>
-          <button
-            className="btn btn-danger btn-sm w-100"
-            onClick={() => onEliminar(cliente.id_cliente)}
-          >
+          <button className="btn btn-danger btn-sm w-100" onClick={() => onEliminar(cliente.id_cliente)}>
             Eliminar
           </button>
         </div>
@@ -35,144 +29,67 @@ function ClienteRow({ cliente, onEliminar, onEditar }) {
 }
 
 ClienteRow.propTypes = {
-  cliente: PropTypes.shape({
-    id_cliente: PropTypes.number.isRequired,
-    nombre_cliente: PropTypes.string.isRequired,
-    direccion_cliente: PropTypes.string.isRequired,
-    telefono_cliente: PropTypes.string.isRequired,
-    correo_cliente: PropTypes.string.isRequired,
-    encargado_cliente: PropTypes.string.isRequired,
-    estado_cliente: PropTypes.string.isRequired,
-  }).isRequired,
+  cliente: PropTypes.object.isRequired,
   onEliminar: PropTypes.func.isRequired,
   onEditar: PropTypes.func.isRequired,
 };
 
 export default function ConsultarCliente() {
   const [clientes, setClientes] = useState([]);
-  const [consultar, setConsultar] = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const [editingCliente, setEditingCliente] = useState(null);
-  const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
-  const consultarClientes = () => {
+  const obtenerClientes = () => {
     Axios.get("http://localhost:3000/api/clientes")
-      .then((response) => {
-        setClientes(response.data);
-        setError(null);
-      })
-      .catch((error) => {
-        console.error("Error en la consulta de clientes:", error);
-        setError(
-          "Hubo un error al cargar los clientes. Por favor, intenta nuevamente."
-        );
-      });
+      .then((res) => setClientes(res.data))
+      .catch(() => setError("Error al cargar los clientes."));
   };
 
   const eliminarCliente = (id) => {
     Axios.delete(`http://localhost:3000/api/clientes/${id}`)
       .then(() => {
-        setClientes((prevClientes) =>
-          prevClientes.filter((cliente) => cliente.id_cliente !== id)
-        );
-
+        setClientes((prev) => prev.filter((c) => c.id_cliente !== id));
       })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
-
-  const handleNombreChange = (e) => {
-    const updated = {
-      ...editingCliente,
-      nombre_cliente: e.target.value,
-    };
-    setEditingCliente(updated);
+      .catch((err) => console.error(err));
   };
 
-  const handleDireccionChange = (e) => {
-    const updated = {
-      ...editingCliente,
-      direccion_cliente: e.target.value,
-    };
-    setEditingCliente(updated);
-  };
-
-  const handleTelefonoChange = (e) => {
-    const updated = {
-      ...editingCliente,
-      telefono_cliente: e.target.value,
-    };
-    setEditingCliente(updated);
-  };
-
-  const handleCorreoChange = (e) => {
-    const updated = {
-      ...editingCliente,
-      correo_cliente: e.target.value,
-    };
-    setEditingCliente(updated);
-  };
-
-  const handleEstadoChange = (e) => {
-    const updated = {
-      ...editingCliente,
-      estado_cliente: e.target.value,
-    };
-    setEditingCliente(updated);
-  };
-
-  const handleEncargadoChange = (e) => {
-    const updated = {
-      ...editingCliente,
-      encargado_cliente: e.target.value,
-    };
-    setEditingCliente(updated);
-  };
-
-  //ESTAAS FUNCIONES SON PARA ABRIR Y CERRAR LA VENTANA EMERGENTE(MODAL)
   const openModal = (cliente) => {
-    if (cliente) {
-      setEditingCliente(cliente);
-      setIsModalOpen(true);
-    }
+    setEditingCliente(cliente);
+    setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setEditingCliente(null);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditingCliente((prev) => ({ ...prev, [name]: value }));
   };
 
   const editarCliente = () => {
-    Axios.put(`http://localhost:3000/api/clientes/${editingCliente.id_cliente}`, {
-      nombreCliente: editingCliente.nombre_cliente,
-      direccionCliente: editingCliente.direccion_cliente,
-      telefonoCliente: editingCliente.telefono_cliente,
-      correoCliente: editingCliente.correo_cliente,
-      encargadoCliente: editingCliente.encargado_cliente,
-      estadoCliente: editingCliente.estado_cliente,
-    })
+    Axios.put(`http://localhost:3000/api/clientes/${editingCliente.id_cliente}`, editingCliente)
       .then(() => {
-        consultarClientes();  // Llama a la función que actualiza la lista de clientes
-        closeModal();  // Cierra el modal después de guardar los cambios
+        obtenerClientes();
+        closeModal();
       })
-      .catch((error) => {
-        console.error(error);
-      });
+      .catch((err) => console.error(err));
   };
 
-  const resultadoFiltrado = useMemo(() => {
-    return consultar
-      ? clientes.filter((dato) =>
-        dato.nombre_cliente.toLowerCase().includes(consultar.toLowerCase())
-      )
-      : clientes;
-  }, [consultar, clientes]);
+  const clientesFiltrados = useMemo(() => {
+    const texto = busqueda.toLowerCase();
+    return clientes.filter((c) =>
+      c.nombre_cliente.toLowerCase().includes(texto)
+    );
+  }, [busqueda, clientes]);
 
   useEffect(() => {
-    consultarClientes();
+    obtenerClientes();
   }, []);
-
-  const navigate = useNavigate();
 
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
@@ -185,48 +102,47 @@ export default function ConsultarCliente() {
               <h1 className="text-center w-100 mb-0">Consultar cliente</h1>
             </div>
           </div>
-          <div className="text-center d-flex justify-content-center input-group mb-1">
-            <span className="input-group-text" id="icon-input">
-              🔍︎
-            </span>
+          <div className="input-group mb-1">
+            <span className="input-group-text">🔍︎</span>
             <input
-              value={consultar}
-              onChange={(e) => setConsultar(e.target.value)}
               type="text"
-              placeholder="Consulta los clientes"
               className="form-control"
+              placeholder="Buscar por nombre"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
           {error && <div className="alert alert-danger">{error}</div>}
         </div>
       </div>
+
       <div className="container-fluid px-3">
         <div className="table-responsive">
-          <table className="table table-striped table-hover mt-5 shadow-lg align-items-center text-center">
-            <thead>
-              <tr className="bg-white text-dark">
+          <table className="table table-striped table-hover mt-5 shadow-lg text-center">
+            <thead className="bg-white text-dark">
+              <tr>
                 <th>Nombre</th>
                 <th>Dirección</th>
                 <th>Teléfono</th>
-                <th>Correo Electrónico</th>
+                <th>Correo</th>
                 <th>Responsable</th>
                 <th>Estado</th>
                 <th>Opciones</th>
               </tr>
             </thead>
             <tbody>
-              {resultadoFiltrado.length > 0 ? (
-                resultadoFiltrado.map((cliente) => (
+              {clientesFiltrados.length > 0 ? (
+                clientesFiltrados.map((cliente) => (
                   <ClienteRow
                     key={cliente.id_cliente}
                     cliente={cliente}
-                    onEliminar={eliminarCliente}
                     onEditar={openModal}
+                    onEliminar={eliminarCliente}
                   />
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7">No hay clientes creados.</td>
+                  <td colSpan="7">No hay clientes registrados.</td>
                 </tr>
               )}
             </tbody>
@@ -238,92 +154,45 @@ export default function ConsultarCliente() {
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Editar Cliente"
-        className="custom-modal modal-dialog modal-dialog-scrollable modal-dialog-centered"
+        className="custom-modal modal-dialog modal-dialog-centered"
         overlayClassName="custom-overlay modal-backdrop"
         ariaHideApp={false}
       >
         <div className="modal-content">
           <div className="modal-header">
             <h5 className="modal-title">Editar Cliente</h5>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={closeModal}
-              aria-label="Cerrar"
-            ></button>
+            <button className="btn-close" onClick={closeModal}></button>
           </div>
           <div className="modal-body">
             <form>
-              {/* Formulario de cliente */}
+              {[
+                { label: "Nombre", name: "nombre_cliente" },
+                { label: "Dirección", name: "direccion_cliente" },
+                { label: "Teléfono", name: "telefono_cliente" },
+                { label: "Correo", name: "correo_cliente", type: "email" },
+                { label: "Responsable", name: "encargado_cliente" },
+              ].map((field, index) => (
+                <div className="mb-3" key={index}>
+                  <label htmlFor={field.name} className="form-label">{field.label}:</label>
+                  <input
+                    type={field.type || "text"}
+                    className="form-control"
+                    id={field.name}
+                    name={field.name}
+                    value={editingCliente?.[field.name] || ""}
+                    onChange={handleChange}
+                  />
+                </div>
+              ))}
+
               <div className="mb-3">
-                <label htmlFor="nombreCliente" className="form-label">
-                  Nombre:
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="nombreCliente"
-                  value={editingCliente?.nombre_cliente || ""}
-                  onChange={handleNombreChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="direccionCliente" className="form-label">
-                  Dirección:
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="direccionCliente"
-                  value={editingCliente?.direccion_cliente || ""}
-                  onChange={handleDireccionChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="telefonoCliente" className="form-label">
-                  Teléfono:
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="telefonoCliente"
-                  value={editingCliente?.telefono_cliente || ""}
-                  onChange={handleTelefonoChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="correoCliente" className="form-label">
-                  Correo Electrónico:
-                </label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="correoCliente"
-                  value={editingCliente?.correo_cliente || ""}
-                  onChange={handleCorreoChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="encargadoCliente" className="form-label">
-                  Responsable:
-                </label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="encargadoCliente"
-                  value={editingCliente?.encargado_cliente || ""}
-                  onChange={handleEncargadoChange}
-                />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="estadoCliente" className="form-label">
-                  Estado:
-                </label>
+                <label htmlFor="estado_cliente" className="form-label">Estado:</label>
                 <select
                   className="form-select"
-                  id="estadoCliente"
+                  id="estado_cliente"
+                  name="estado_cliente"
                   value={editingCliente?.estado_cliente || ""}
-                  onChange={handleEstadoChange}
+                  onChange={handleChange}
                 >
                   <option value="Activo">Activo</option>
                   <option value="Inactivo">Inactivo</option>
@@ -332,12 +201,8 @@ export default function ConsultarCliente() {
             </form>
           </div>
           <div className="modal-footer d-flex justify-content-center">
-            <button
-              type="button"
-              className="btn btn-success w-50"
-              onClick={editarCliente}
-            >
-              <i className="bi bi-save"></i> Guardar Cambios
+            <button className="btn btn-success w-50" onClick={editarCliente}>
+              Guardar Cambios
             </button>
           </div>
         </div>

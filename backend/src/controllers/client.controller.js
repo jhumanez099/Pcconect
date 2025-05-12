@@ -12,7 +12,7 @@ const ERROR_MESSAGES = {
 
 const handleError = (res, status, message, error = null) => {
   console.error(message, error);
-  res.status(status).json({ message });
+  return res.status(status).json({ message });
 };
 
 const validateFields = (fields) => {
@@ -21,124 +21,117 @@ const validateFields = (fields) => {
   );
 };
 
-const crearClientes = async (req, res) => {
+// Crear
+const crearCliente = async (req, res) => {
   const fields = {
-    nombreCliente: req.body.nombreCliente,
-    direccionCliente: req.body.direccionCliente,
-    telefonoCliente: req.body.telefonoCliente,
-    correoCliente: req.body.correoCliente,
-    encargadoCliente: req.body.encargadoCliente,
-    estadoCliente: req.body.estadoCliente,
+    nombre_cliente: req.body.nombre_cliente,
+    direccion_cliente: req.body.direccion_cliente,
+    telefono_cliente: req.body.telefono_cliente,
+    correo_cliente: req.body.correo_cliente,
+    encargado_cliente: req.body.encargado_cliente,
+    estado_cliente: req.body.estado_cliente,
   };
 
   if (!validateFields(fields)) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
+    return handleError(res, 400, ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   try {
     const clienteNuevo = await Cliente.crear(fields);
     res.status(201).json({
-      message: "El cliente se creó con éxito", clienteNuevo
+      message: "El cliente se creó con éxito",
+      clienteId: clienteNuevo.insertId,
     });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      const campoDuplicado = error.sqlMessage.includes("unique_correo_cliente")
+      const campo = error.sqlMessage.includes("unique_correo_cliente")
         ? "correo"
         : "nombre";
-      return res
-        .status(400)
-        .json({ message: `El ${campoDuplicado} del cliente ya existe.` });
+      return handleError(res, 400, `El ${campo} del cliente ya existe.`, error);
     }
-    res.status(500).json({ message: "Error al crear el cliente." });
+    return handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
   }
 };
 
-const consultarClientes = async (req, res) => {
+// Consultar
+const consultarClientes = async (_req, res) => {
   try {
     const clientes = await Cliente.obtenerTodos();
     res.status(200).json(clientes);
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
+// Actualizar
 const actualizarCliente = async (req, res) => {
-  const idCliente = req.params.id;
+  const id = req.params.id;
+
   const fields = {
-    nombreCliente: req.body.nombreCliente,
-    direccionCliente: req.body.direccionCliente,
-    telefonoCliente: req.body.telefonoCliente,
-    correoCliente: req.body.correoCliente,
-    encargadoCliente: req.body.encargadoCliente,
-    estadoCliente: req.body.estadoCliente,
+    nombre_cliente: req.body.nombre_cliente,
+    direccion_cliente: req.body.direccion_cliente,
+    telefono_cliente: req.body.telefono_cliente,
+    correo_cliente: req.body.correo_cliente,
+    encargado_cliente: req.body.encargado_cliente,
+    estado_cliente: req.body.estado_cliente,
   };
 
   try {
-    // Obtener el cliente actual desde la base de datos
-    const clienteExistente = await Cliente.obtenerPorId(idCliente);
+    const existente = await Cliente.obtenerPorId(id);
 
-    // Si no existe el cliente, retornar error
-    if (!clienteExistente || clienteExistente.length === 0) {
-      return res.status(404).json({ message: ERROR_MESSAGES.CLIENT_NOT_FOUND });
+    if (!existente || existente.length === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.CLIENT_NOT_FOUND);
     }
 
-    // Filtrar solo los campos modificados
-    const camposModificados = {};
+    const cambios = {};
     Object.keys(fields).forEach((key) => {
-      if (fields[key] !== clienteExistente[0][key]) {
-        camposModificados[key] = fields[key];
+      if (fields[key] !== existente[0][key]) {
+        cambios[key] = fields[key];
       }
     });
 
-    // Si no hay campos modificados, retornar mensaje de sin cambios
-    if (Object.keys(camposModificados).length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No se realizaron cambios en el cliente." });
+    if (Object.keys(cambios).length === 0) {
+      return res.status(200).json({ message: "No se realizaron cambios." });
     }
 
-    // Actualizar solo los campos modificados
-    const clienteActualizado = await Cliente.actualizar(
-      idCliente,
-      camposModificados
-    );
+    const resultado = await Cliente.actualizar(id, cambios);
 
-    if (clienteActualizado.affectedRows === 0) {
-      return res.status(404).json({ message: ERROR_MESSAGES.CLIENT_NOT_FOUND });
+    if (resultado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.CLIENT_NOT_FOUND);
     }
 
     res.status(200).json({ message: "Cliente actualizado con éxito." });
   } catch (error) {
     if (error.code === "ER_DUP_ENTRY") {
-      handleError(res, 400, ERROR_MESSAGES.CLIENT_ALREADY_EXISTS, error);
-    } else {
-      handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
+      return handleError(res, 400, ERROR_MESSAGES.CLIENT_ALREADY_EXISTS, error);
     }
+    return handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
+// Eliminar
 const eliminarCliente = async (req, res) => {
-  const idCliente = req.params.id;
+  const id = req.params.id;
 
-  if (!idCliente) {
-    return res.status(400).json({ message: "El ID del cliente es requerido." });
+  if (!id) {
+    return handleError(res, 400, "El ID del cliente es requerido.");
   }
 
   try {
-    const clienteEliminado = await Cliente.eliminar(idCliente);
+    const resultado = await Cliente.eliminar(id);
 
-    if (clienteEliminado.affectedRows === 0) {
-      return res.status(404).json({ message: ERROR_MESSAGES.CLIENT_NOT_FOUND });
+    if (resultado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.CLIENT_NOT_FOUND);
     }
 
     res.status(200).json({ message: "Cliente eliminado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
   }
 };
 
 module.exports = {
-  crearClientes,
+  crearCliente,
   consultarClientes,
   actualizarCliente,
   eliminarCliente,
