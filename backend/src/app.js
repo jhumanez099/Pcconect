@@ -1,6 +1,7 @@
+// src/app.js
 const express = require("express");
-const morgan = require("morgan"); // Importa el módulo morgan (para el registro de solicitudes)
-const cors = require("cors")
+const morgan = require("morgan");
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 // Importamos las rutas
@@ -12,25 +13,40 @@ const tipoUsuarioRoutes = require("./routes/userType.routes.js");
 const usuarioRoutes = require("./routes/user.routes.js");
 const pedidoRoutes = require("./routes/order.routes.js");
 const detallePedidoRoutes = require("./routes/orderDetail.routes.js");
-const authRoutes = require("./routes/auth.routes.js")
+const authRoutes = require("./routes/auth.routes.js");
 
 const app = express();
 
-app.use(morgan("dev")); //Sirve para ver las peticiones que se le hacen al servidor
-app.use(express.json()); // Habilita el middleware para analizar datos JSON en las solicitudes
-app.use(cors());
+// ✅ Middleware de Configuración
+app.use(morgan("dev"));
+app.use(express.json());
 app.use(cookieParser());
 
+// ✅ Configuración de CORS (Permitir Cookies)
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Cambia esto al dominio de tu frontend
+    credentials: true, // ✅ Permitir el envío de cookies
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-app.use('/api',clienteRoutes); //Utilizamos las rutas del CRUD de clientes
-app.use('/api',tipoEquipoRoutes); //Utilizamos las rutas del CRUD de tipo de equipos
-app.use('/api',equipoRoutes); //Utilizamos las rutas del CRUD de equipos
-app.use('/api',tipoPedidoRoutes); //Utilizamos las rutas del CRUD de tipo de pedidos
-app.use('/api',tipoUsuarioRoutes); //Utilizamos las rutas del CRUD de tipo de usuarios
-app.use('/api',usuarioRoutes); //Utilizamos las rutas del CRUD de usuarios
-app.use('/api',pedidoRoutes); //Utilizamos las rutas del CRUD de pedidos
-app.use('/api',detallePedidoRoutes); //Utilizamos las rutas del CRUD de pedidos
-app.use('/api',authRoutes); //Utilizamos las rutas para la autenticacion
+// ✅ Configurar las Rutas
+app.use('/api', clienteRoutes);
+app.use('/api', tipoEquipoRoutes);
+app.use('/api', equipoRoutes);
+app.use('/api', tipoPedidoRoutes);
+app.use('/api', tipoUsuarioRoutes);
+app.use('/api', usuarioRoutes);
+app.use('/api', pedidoRoutes);
+app.use('/api', detallePedidoRoutes);
+app.use('/api', authRoutes);
 
+// ✅ Manejo de errores (opcional)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: "Internal Server Error", error: err.message });
+});
 
 module.exports = app;

@@ -24,7 +24,7 @@ const validateFields = (fields) => {
   );
 };
 
-const register = async (req, res) => {
+const  register = async (req, res) => {
   const fields = {
     idTipoUsuario: req.body.idTipoUsuario,
     nombreUsuario: req.body.nombreUsuario,
