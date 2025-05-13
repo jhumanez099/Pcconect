@@ -9,16 +9,16 @@ export default function LoginRegister() {
     const navigate = useNavigate();
     const { setUser } = useContext(AuthContext);
 
-    const [isRegister, setIsRegister] = useState(false);
+    // const [isRegister, setIsRegister] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
-    const [telefono, setTelefono] = useState("");
-    const [cargo, setCargo] = useState("");
-    const [estadoUsuario] = useState("activo");
+    // const [name, setName] = useState("");
+    // const [telefono, setTelefono] = useState("");
+    // const [cargo, setCargo] = useState("");
+    // const [estadoUsuario] = useState("activo");
 
-    const toggleForm = () => setIsRegister(!isRegister);
+    // const toggleForm = () => setIsRegister(!isRegister);
     const togglePassword = () => setShowPassword(!showPassword);
 
     const handleLogin = async () => {
@@ -57,50 +57,50 @@ export default function LoginRegister() {
         }
     };
 
-    const handleRegister = async () => {
-        if (!name || !email || !password || !telefono || !cargo) {
-            alert("Todos los campos son obligatorios");
-            return;
-        }
+    // const handleRegister = async () => {
+    //     if (!name || !email || !password || !telefono || !cargo) {
+    //         alert("Todos los campos son obligatorios");
+    //         return;
+    //     }
 
-        try {
-            const res = await fetch("http://localhost:3000/api/auth/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                    nombre_usuario: name,
-                    correo_usuario: email,
-                    contraseña_usuario: password,
-                    telefono_usuario: telefono,
-                    cargo_usuario: cargo,
-                    estado_usuario: estadoUsuario,
-                }),
-            });
+    //     try {
+    //         const res = await fetch("http://localhost:3000/api/auth/register", {
+    //             method: "POST",
+    //             headers: { "Content-Type": "application/json" },
+    //             credentials: "include",
+    //             body: JSON.stringify({
+    //                 nombre_usuario: name,
+    //                 correo_usuario: email,
+    //                 contraseña_usuario: password,
+    //                 telefono_usuario: telefono,
+    //                 cargo_usuario: cargo,
+    //                 estado_usuario: estadoUsuario,
+    //             }),
+    //         });
 
-            if (res.ok) {
-                const perfil = await fetch("http://localhost:3000/api/auth/profile", {
-                    credentials: "include",
-                });
+    //         if (res.ok) {
+    //             const perfil = await fetch("http://localhost:3000/api/auth/profile", {
+    //                 credentials: "include",
+    //             });
 
-                const data = await perfil.json();
-                setUser(data.user);
-                alert("Registro exitoso");
-                navigate("/MenuPrincipal");
-            } else {
-                const data = await res.json();
-                alert(data.message || "Error al registrarse");
-            }
-        } catch (error) {
-            console.error("Error al registrar:", error);
-            alert("Error al registrar");
-        }
-    };
+    //             const data = await perfil.json();
+    //             setUser(data.user);
+    //             alert("Registro exitoso");
+    //             navigate("/MenuPrincipal");
+    //         } else {
+    //             const data = await res.json();
+    //             alert(data.message || "Error al registrarse");
+    //         }
+    //     } catch (error) {
+    //         console.error("Error al registrar:", error);
+    //         alert("Error al registrar");
+    //     }
+    // };
 
     return (
         <div className="d-flex justify-content-center align-items-center vh-100 position-relative bg-light">
             <div className="login-container" style={{
-                background: isRegister ? '#FF5A5F' : '#2E3A59',
+                // background: isRegister ? '#FF5A5F' : '#2E3A59',
                 width: '350px',
                 borderRadius: '25px',
                 padding: '30px',
@@ -111,7 +111,7 @@ export default function LoginRegister() {
                     <img src={logo} className="logo" alt="Logo" />
                 </div>
 
-                {isRegister ? (
+                {/* {isRegister ? (
                     <div>
                         <h3 className="text-center">Registrarme</h3>
                         <input type="text" placeholder="Nombre" className="form-control mb-2" value={name} onChange={(e) => setName(e.target.value)} />
@@ -124,7 +124,7 @@ export default function LoginRegister() {
                         </div>
                         <button className="btn btn-light w-100" onClick={handleRegister}>Crear cuenta</button>
                     </div>
-                ) : (
+                ) : ( */}
                     <div>
                         <h3 className="text-center">LOGIN</h3>
                         <input type="email" placeholder="Correo" className="form-control mb-2" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -134,10 +134,10 @@ export default function LoginRegister() {
                         </div>
                         <button className="btn btn-light w-100" onClick={handleLogin}>Iniciar Sesión</button>
                     </div>
-                )}
+                {/* )} */}
 
                 <div className="position-absolute" style={{ bottom: '-5px', right: '-5px' }}>
-                    <button className="btn btn-danger rounded-circle" style={{ width: '50px', height: '50px' }} onClick={toggleForm}>+</button>
+                    {/* <button className="btn btn-danger rounded-circle" style={{ width: '50px', height: '50px' }} onClick={toggleForm}>+</button> */}
                 </div>
             </div>
         </div>
