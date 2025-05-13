@@ -1,65 +1,53 @@
 const pool = require("../config/db.js");
 
 const Equipo = {
-  // Crear un equipo
   async crear(fields) {
-    const query = `
-      INSERT INTO 
-        equipos(id_tipo_equipo, modelo_equipo, marca_equipo, especificaciones_equipo, estado_equipo, fecha_compra_equipo)
-      VALUES 
-        (?, ?, ?, ?, ?, ?)
+    const sql = `
+      INSERT INTO equipos (
+        id_tipo_equipo,
+        modelo_equipo,
+        marca_equipo,
+        especificaciones_equipo,
+        fecha_compra_equipo,
+        estado_equipo
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
-    const [result] = await pool.query(query, Object.values(fields));
+    const [result] = await pool.query(sql, Object.values(fields));
     return result;
   },
 
-  // Consultar todos los equipos
   async obtenerTodos() {
-    const query = `
-      SELECT 
-        e.*, te.* 
-      FROM 
-        equipos e 
-      JOIN 
-        tipo_equipo te ON te.id_tipo_equipo = e.id_tipo_equipo
+    const sql = `
+      SELECT e.*, t.nombre_tipo_equipo
+      FROM equipos e
+      JOIN tipo_equipo t ON e.id_tipo_equipo = t.id_tipo_equipo
     `;
-    const [equipos] = await pool.query(query);
-    return equipos;
+    const [rows] = await pool.query(sql);
+    return rows;
   },
 
-  // Consultar un equipo por ID
   async obtenerPorId(id) {
-    const query = `
-      SELECT 
-        e.*, te.*
-      FROM 
-        equipos e 
-      JOIN 
-        tipo_equipo te ON te.id_tipo_equipo = e.id_tipo_equipo 
-      WHERE 
-        e.id_equipo = ?
-      LIMIT   
-        1
-    `;
-    const [equipo] = await pool.query(query, [id]);
-    return equipo;
+    const sql = "SELECT * FROM equipos WHERE id_equipo = ?";
+    const [rows] = await pool.query(sql, [id]);
+    return rows;
   },
 
   async actualizar(id, fields) {
     const keys = Object.keys(fields);
     const values = Object.values(fields);
+    if (keys.length === 0) return { affectedRows: 0 };
 
     const setClause = keys.map((key) => `${key} = ?`).join(", ");
-    const query = `UPDATE equipos SET ${setClause} WHERE id_equipo = ?`;
+    const sql = `UPDATE equipos SET ${setClause} WHERE id_equipo = ?`;
 
-    const [result] = await pool.query(query, [...values, id]);
+    const [result] = await pool.query(sql, [...values, id]);
     return result;
   },
 
-  // Eliminar un equipo
   async eliminar(id) {
-    const query = "DELETE FROM equipos WHERE id_equipo = ? LIMIT 1";
-    const [result] = await pool.query(query, [id]);
+    const sql = "DELETE FROM equipos WHERE id_equipo = ?";
+    const [result] = await pool.query(sql, [id]);
     return result;
   },
 };

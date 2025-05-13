@@ -31,82 +31,78 @@ EquipoRow.propTypes = {
 };
 
 export default function ConsultarEquipo() {
-  const [equipos, setEquipos] = useState([]);
+  const [equipo, setEquipo] = useState([]);
+  const [tipoEquipo, setTipoEquipo] = useState([]);
   const [busqueda, setBusqueda] = useState("");
-  const [equipoEditando, setEquipoEditando] = useState(null);
+  const [editingEquipo, setEditingEquipo] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tiposEquipo, setTiposEquipo] = useState([]);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const obtenerEquipos = () => {
-    Axios.get("http://localhost:3000/api/equipos")
-      .then(res => setEquipos(res.data))
-      .catch(() => setError("Error al cargar los equipos."));
+    Axios.get("http://localhost:3000/api/equipos", { withCredentials: true })
+      .then((res) => setEquipo(res.data))
+      .catch(() => alert("Error al cargar los equipos."));
   };
 
   const obtenerTiposEquipo = () => {
-    Axios.get("http://localhost:3000/api/tiposEquipos")
-      .then(res => setTiposEquipo(res.data))
-      .catch(err => console.error(err));
+    Axios.get("http://localhost:3000/api/tiposEquipos", { withCredentials: true })
+      .then((res) => setTipoEquipo(res.data))
+      .catch(() => console.error("Error al cargar tipos de equipo."));
   };
 
   const eliminarEquipo = (id) => {
-    Axios.delete(`http://localhost:3000/api/equipos/${id}`)
-      .then(() => setEquipos(prev => prev.filter(e => e.id_equipo !== id)))
-      .catch(err => console.error(err));
+    Axios.delete(`http://localhost:3000/api/equipos/${id}`, { withCredentials: true })
+      .then(() => {
+        setEquipo((prev) => prev.filter((e) => e.id_equipo !== id));
+        alert("Equipo eliminado correctamente.");
+      })
+      .catch((err) => console.error(err));
   };
 
   const openModal = (equipo) => {
-    setEquipoEditando(equipo);
+    setEditingEquipo(equipo);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    setEditingEquipo(null);
     setIsModalOpen(false);
-    setEquipoEditando(null);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEquipoEditando(prev => ({ ...prev, [name]: value }));
+    setEditingEquipo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const actualizarEquipo = () => {
-    const fechaFormateada = new Date(equipoEditando.fecha_compra_equipo).toISOString().split("T")[0];
+  const editarEquipo = () => {
+    const equipoActualizado = {
+      ...editingEquipo,
+      fecha_compra_equipo: new Date(editingEquipo.fecha_compra_equipo).toISOString().split("T")[0],
+    };
 
-    Axios.put(`http://localhost:3000/api/equipos/${equipoEditando.id_equipo}`, {
-      id_tipo_equipo: equipoEditando.id_tipo_equipo,
-      modelo_equipo: equipoEditando.modelo_equipo,
-      marca_equipo: equipoEditando.marca_equipo,
-      especificaciones_equipo: equipoEditando.especificaciones_equipo,
-      fecha_compra_equipo: fechaFormateada,
-      estado_equipo: equipoEditando.estado_equipo,
+    Axios.put(`http://localhost:3000/api/equipos/${editingEquipo.id_equipo}`, equipoActualizado, {
+      withCredentials: true,
     })
       .then(() => {
-        alert("Equipo actualizado correctamente.");
         obtenerEquipos();
+        alert("Equipo actualizado con éxito.");
         closeModal();
       })
-      .catch(() => alert("Error al actualizar el equipo."));
+      .catch((err) => console.error(err));
   };
 
-  const resultadoFiltrado = useMemo(() => {
+  const equiposFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase();
-    return equipos.filter(item =>
+    return equipo.filter((e) =>
       [
-        item.nombre_tipo_equipo,
-        item.modelo_equipo,
-        item.marca_equipo,
-        item.especificaciones_equipo,
-        item.estado_equipo,
-        new Date(item.fecha_compra_equipo).toLocaleDateString("es-CO"),
-      ]
-        .join(" ")
-        .toLowerCase()
-        .includes(texto)
+        e.nombre_tipo_equipo,
+        e.modelo_equipo,
+        e.marca_equipo,
+        e.estado_equipo,
+        new Date(e.fecha_compra_equipo).toLocaleDateString("es-CO"),
+      ].join(" ").toLowerCase().includes(texto)
     );
-  }, [busqueda, equipos]);
+  }, [busqueda, equipo]);
 
   useEffect(() => {
     obtenerEquipos();
@@ -129,13 +125,11 @@ export default function ConsultarEquipo() {
             <input
               type="text"
               className="form-control"
-              placeholder="Buscar por tipo, modelo, marca..."
-              aria-label="Buscar equipo"
+              placeholder="Buscar por modelo, tipo, etc."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
-          {error && <div className="alert alert-danger">{error}</div>}
         </div>
       </div>
 
@@ -144,21 +138,21 @@ export default function ConsultarEquipo() {
           <table className="table table-striped table-hover mt-5 shadow-lg text-center">
             <thead className="bg-white text-dark">
               <tr>
-                <th>Tipo de equipo</th>
+                <th>Tipo</th>
                 <th>Modelo</th>
                 <th>Marca</th>
                 <th>Especificaciones</th>
                 <th>Estado</th>
-                <th>Fecha de compra</th>
+                <th>Fecha compra</th>
                 <th>Opciones</th>
               </tr>
             </thead>
             <tbody>
-              {resultadoFiltrado.length > 0 ? (
-                resultadoFiltrado.map((equipo) => (
+              {equiposFiltrados.length > 0 ? (
+                equiposFiltrados.map((e) => (
                   <EquipoRow
-                    key={equipo.id_equipo}
-                    equipo={equipo}
+                    key={e.id_equipo}
+                    equipo={e}
                     onEditar={openModal}
                     onEliminar={eliminarEquipo}
                   />
@@ -176,75 +170,80 @@ export default function ConsultarEquipo() {
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
-        contentLabel="Editar Equipo"
-        className="custom-modal modal-dialog modal-dialog-centered"
-        overlayClassName="custom-overlay modal-backdrop"
+        contentLabel="Editar equipo"
+        className="custom-modal"
+        overlayClassName="custom-overlay"
         ariaHideApp={false}
       >
         <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Editar equipo</h5>
-            <button type="button" className="btn-close" onClick={closeModal}></button>
+          <div className="modal-header justify-content-center mb-3">
+            <h5 className="modal-title text-center w-100">Editar Equipo</h5>
+            <button className="btn-close position-absolute end-0 me-3" onClick={closeModal}></button>
           </div>
           <div className="modal-body">
-            {equipoEditando && (
+            {editingEquipo && (
               <form>
-                <div className="mb-3">
-                  <label htmlFor="id_tipo_equipo" className="form-label">Tipo de equipo:</label>
-                  <select
-                    className="form-select"
-                    id="id_tipo_equipo"
-                    name="id_tipo_equipo"
-                    value={equipoEditando.id_tipo_equipo}
-                    onChange={handleChange}
-                  >
-                    <option value="">Seleccione...</option>
-                    {tiposEquipo.map((tipo) => (
-                      <option key={tipo.id_tipo_equipo} value={tipo.id_tipo_equipo}>
-                        {tipo.nombre_tipo_equipo}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {[
-                  { label: "Modelo", id: "modelo_equipo", type: "text" },
-                  { label: "Marca", id: "marca_equipo", type: "text" },
-                  { label: "Especificaciones", id: "especificaciones_equipo", type: "text" },
-                  { label: "Fecha de compra", id: "fecha_compra_equipo", type: "date" },
-                ].map((field, idx) => (
-                  <div className="mb-3" key={idx}>
-                    <label htmlFor={field.id} className="form-label">{field.label}:</label>
-                    <input
-                      type={field.type}
-                      className="form-control"
-                      id={field.id}
-                      name={field.id}
-                      value={equipoEditando[field.id]}
+                <div className="mb-3 row align-items-center">
+                  <label htmlFor="id_tipo_equipo" className="col-sm-4 col-form-label text-end">Tipo:</label>
+                  <div className="col-sm-8">
+                    <select
+                      className="form-select"
+                      id="id_tipo_equipo"
+                      name="id_tipo_equipo"
+                      value={editingEquipo.id_tipo_equipo}
                       onChange={handleChange}
-                    />
+                    >
+                      <option value="">Seleccione...</option>
+                      {tipoEquipo.map((tipo) => (
+                        <option key={tipo.id_tipo_equipo} value={tipo.id_tipo_equipo}>
+                          {tipo.nombre_tipo_equipo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {[
+                  { label: "Modelo", id: "modelo_equipo" },
+                  { label: "Marca", id: "marca_equipo" },
+                  { label: "Especificaciones", id: "especificaciones_equipo" },
+                  { label: "Fecha de compra", id: "fecha_compra_equipo", type: "date" },
+                ].map((field, index) => (
+                  <div className="mb-3 row align-items-center" key={index}>
+                    <label htmlFor={field.id} className="col-sm-4 col-form-label text-end">{field.label}:</label>
+                    <div className="col-sm-8">
+                      <input
+                        type={field.type || "text"}
+                        className="form-control"
+                        id={field.id}
+                        name={field.id}
+                        value={editingEquipo[field.id] || ""}
+                        onChange={handleChange}
+                      />
+                    </div>
                   </div>
                 ))}
 
-                <div className="mb-3">
-                  <label htmlFor="estado_equipo" className="form-label">Estado:</label>
-                  <select
-                    className="form-select"
-                    id="estado_equipo"
-                    name="estado_equipo"
-                    value={equipoEditando.estado_equipo}
-                    onChange={handleChange}
-                  >
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                  </select>
+                <div className="mb-3 row align-items-center">
+                  <label htmlFor="estado_equipo" className="col-sm-4 col-form-label text-end">Estado:</label>
+                  <div className="col-sm-8">
+                    <select
+                      className="form-select"
+                      id="estado_equipo"
+                      name="estado_equipo"
+                      value={editingEquipo.estado_equipo}
+                      onChange={handleChange}
+                    >
+                      <option value="Activo">Activo</option>
+                      <option value="Inactivo">Inactivo</option>
+                    </select>
+                  </div>
                 </div>
               </form>
             )}
           </div>
           <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success w-50" onClick={actualizarEquipo}>
-              Guardar Cambios
-            </button>
+            <button className="btn btn-success w-50" onClick={editarEquipo}>Guardar Cambios</button>
           </div>
         </div>
       </Modal>
