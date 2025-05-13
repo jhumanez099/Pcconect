@@ -2,10 +2,10 @@ import Axios from "axios";
 import NavBar from "../../components/Navbar";
 import Modal from "react-modal";
 import PropTypes from "prop-types";
-import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
 
-function UsuarioRow({ usuario, onEditar, onEliminar }) {
+function UsuarioRow({ usuario, onEliminar, onEditar }) {
   return (
     <tr>
       <td>{usuario.nombre_usuario}</td>
@@ -25,99 +25,77 @@ function UsuarioRow({ usuario, onEditar, onEliminar }) {
 }
 
 UsuarioRow.propTypes = {
-  usuario: PropTypes.shape({
-    id_usuario: PropTypes.number.isRequired,
-    nombre_tipo_usuario: PropTypes.string.isRequired,
-    nombre_usuario: PropTypes.string.isRequired,
-    correo_usuario: PropTypes.string.isRequired,
-    contraseña_usuario: PropTypes.string.isRequired,
-    telefono_usuario: PropTypes.string.isRequired,
-    cargo_usuario: PropTypes.string.isRequired,
-    estado_usuario: PropTypes.string.isRequired,
-  }).isRequired,
+  usuario: PropTypes.object.isRequired,
   onEliminar: PropTypes.func.isRequired,
   onEditar: PropTypes.func.isRequired,
 };
 
-
 export default function ConsultarUsuario() {
   const [usuarios, setUsuarios] = useState([]);
-  const [consultar, setConsultar] = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const [editingUsuario, setEditingUsuario] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tiposUsuario, setTiposUsuario] = useState([]);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const obtenerUsuarios = () => {
-    Axios.get("http://localhost:3000/api/usuarios")
-      .then(res => {
-        setUsuarios(res.data);
-        setError(null);
-      })
-      .catch(() => {
-        setError("Error al cargar los usuarios.");
-      });
+    Axios.get("http://localhost:3000/api/usuarios", { withCredentials: true })
+      .then(res => setUsuarios(res.data))
+      .catch(() => setError("Error al cargar los usuarios."));
   };
 
   const obtenerTiposUsuario = () => {
-    Axios.get("http://localhost:3000/api/tiposUsuarios")
+    Axios.get("http://localhost:3000/api/tiposUsuarios", { withCredentials: true })
       .then(res => setTiposUsuario(res.data))
-      .catch(err => console.error(err));
+      .catch(() => console.error("Error al obtener tipos de usuario."));
   };
 
   const eliminarUsuario = (id) => {
-    Axios.delete(`http://localhost:3000/api/usuarios/${id}`)
+    Axios.delete(`http://localhost:3000/api/usuarios/${id}`, { withCredentials: true })
       .then(() => {
         setUsuarios(prev => prev.filter(u => u.id_usuario !== id));
+        alert("Usuario eliminado correctamente.");
       })
       .catch(err => console.error(err));
   };
 
   const openModal = (usuario) => {
-    if (usuario) {
-      setEditingUsuario(usuario);
-      setIsModalOpen(true);
-    }
+    setEditingUsuario(usuario);
+    setIsModalOpen(true);
   };
 
-  const closeModal = () => setIsModalOpen(false);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingUsuario(null);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditingUsuario((prev) => ({ ...prev, [name]: value }));
+    setEditingUsuario(prev => ({ ...prev, [name]: value }));
   };
 
-  const actualizarUsuario = () => {
-    Axios.put(`http://localhost:3000/api/usuarios/${editingUsuario.id_usuario}`, {
-      nombre_usuario: editingUsuario.nombre_usuario,
-      correo_usuario: editingUsuario.correo_usuario,
-      contraseña_usuario: editingUsuario.contraseña_usuario || "123456",
-      telefono_usuario: editingUsuario.telefono_usuario,
-      cargo_usuario: editingUsuario.cargo_usuario,
-      estado_usuario: editingUsuario.estado_usuario,
-      id_tipo_usuario: editingUsuario.id_tipo_usuario,
+  const editarUsuario = () => {
+    Axios.put(`http://localhost:3000/api/usuarios/${editingUsuario.id_usuario}`, editingUsuario, {
+      withCredentials: true,
     })
       .then(() => {
         obtenerUsuarios();
+        alert("Usuario actualizado con éxito.");
         closeModal();
       })
       .catch(err => console.error(err));
   };
 
-  const resultadoFiltrado = useMemo(() => {
-    return consultar
-      ? usuarios.filter(u =>
-        u.nombre_usuario.toLowerCase().includes(consultar.toLowerCase())
-      )
-      : usuarios;
-  }, [consultar, usuarios]);
+  const usuariosFiltrados = useMemo(() => {
+    const texto = busqueda.toLowerCase();
+    return usuarios.filter((u) => u.nombre_usuario.toLowerCase().includes(texto));
+  }, [busqueda, usuarios]);
 
   useEffect(() => {
     obtenerUsuarios();
     obtenerTiposUsuario();
   }, []);
-
-  const navigate = useNavigate();
 
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
@@ -136,8 +114,8 @@ export default function ConsultarUsuario() {
               type="text"
               className="form-control"
               placeholder="Buscar por nombre"
-              value={consultar}
-              onChange={(e) => setConsultar(e.target.value)}
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
           {error && <div className="alert alert-danger">{error}</div>}
@@ -154,13 +132,13 @@ export default function ConsultarUsuario() {
                 <th>Teléfono</th>
                 <th>Cargo</th>
                 <th>Estado</th>
-                <th>Tipo de usuario</th>
+                <th>Tipo</th>
                 <th>Opciones</th>
               </tr>
             </thead>
             <tbody>
-              {resultadoFiltrado.length > 0 ? (
-                resultadoFiltrado.map((usuario) => (
+              {usuariosFiltrados.length > 0 ? (
+                usuariosFiltrados.map((usuario) => (
                   <UsuarioRow
                     key={usuario.id_usuario}
                     usuario={usuario}
@@ -182,73 +160,81 @@ export default function ConsultarUsuario() {
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Editar Usuario"
-        className="custom-modal modal-dialog modal-dialog-centered"
-        overlayClassName="custom-overlay modal-backdrop"
+        className="custom-modal"
+        overlayClassName="custom-overlay"
         ariaHideApp={false}
       >
         <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Editar Usuario</h5>
-            <button type="button" className="btn-close" onClick={closeModal}></button>
+          <div className="modal-header justify-content-center">
+            <h5 className="modal-title text-center w-100">Editar Usuario</h5>
+            <button className="btn-close position-absolute end-0 me-3" onClick={closeModal}></button>
           </div>
           <div className="modal-body">
             {editingUsuario && (
               <form>
                 {[
-                  { label: "Nombre", id: "nombre_usuario", type: "text" },
-                  { label: "Correo", id: "correo_usuario", type: "email" },
-                  { label: "Teléfono", id: "telefono_usuario", type: "text" },
-                  { label: "Cargo", id: "cargo_usuario", type: "text" },
-                ].map((field, idx) => (
-                  <div className="mb-3" key={idx}>
-                    <label htmlFor={field.id} className="form-label">{field.label}:</label>
-                    <input
-                      type={field.type}
-                      className="form-control"
-                      id={field.id}
-                      name={field.id}
-                      value={editingUsuario[field.id] || ""}
-                      onChange={handleChange}
-                    />
+                  { label: "Nombre", name: "nombre_usuario" },
+                  { label: "Correo", name: "correo_usuario", type: "email" },
+                  { label: "Teléfono", name: "telefono_usuario" },
+                  { label: "Cargo", name: "cargo_usuario" },
+                ].map((field, i) => (
+                  <div className="mb-3 row align-items-center" key={i}>
+                    <label htmlFor={field.name} className="col-sm-4 col-form-label text-end">{field.label}:</label>
+                    <div className="col-sm-8">
+                      <input
+                        type={field.type || "text"}
+                        className="form-control"
+                        id={field.name}
+                        name={field.name}
+                        value={editingUsuario[field.name] || ""}
+                        onChange={handleChange}
+                      />
+                    </div>
                   </div>
                 ))}
 
-                <div className="mb-3">
-                  <label htmlFor="estado_usuario" className="form-label">Estado:</label>
-                  <select
-                    className="form-select"
-                    id="estado_usuario"
-                    name="estado_usuario"
-                    value={editingUsuario.estado_usuario || ""}
-                    onChange={handleChange}
-                  >
-                    <option value="Activo">Activo</option>
-                    <option value="Inactivo">Inactivo</option>
-                  </select>
+                {/* Estado */}
+                <div className="mb-3 row align-items-center">
+                  <label htmlFor="estado_usuario" className="col-sm-4 col-form-label text-end">Estado:</label>
+                  <div className="col-sm-8">
+                    <select
+                      className="form-select"
+                      id="estado_usuario"
+                      name="estado_usuario"
+                      value={editingUsuario.estado_usuario}
+                      onChange={handleChange}
+                    >
+                      <option value="Activo">Activo</option>
+                      <option value="Inactivo">Inactivo</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="mb-3">
-                  <label htmlFor="id_tipo_usuario" className="form-label">Tipo de usuario:</label>
-                  <select
-                    className="form-select"
-                    id="id_tipo_usuario"
-                    name="id_tipo_usuario"
-                    value={editingUsuario.id_tipo_usuario || ""}
-                    onChange={handleChange}
-                  >
-                    <option value="">Seleccione...</option>
-                    {tiposUsuario.map((tipo) => (
-                      <option key={tipo.id_tipo_usuario} value={tipo.id_tipo_usuario}>
-                        {tipo.nombre_tipo_usuario}
-                      </option>
-                    ))}
-                  </select>
+                {/* Tipo de usuario */}
+                <div className="mb-3 row align-items-center">
+                  <label htmlFor="id_tipo_usuario" className="col-sm-4 col-form-label text-end">Tipo:</label>
+                  <div className="col-sm-8">
+                    <select
+                      className="form-select"
+                      id="id_tipo_usuario"
+                      name="id_tipo_usuario"
+                      value={editingUsuario.id_tipo_usuario}
+                      onChange={handleChange}
+                    >
+                      <option value="">Seleccione...</option>
+                      {tiposUsuario.map((tipo) => (
+                        <option key={tipo.id_tipo_usuario} value={tipo.id_tipo_usuario}>
+                          {tipo.nombre_tipo_usuario}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </form>
             )}
           </div>
           <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success w-50" onClick={actualizarUsuario}>
+            <button className="btn btn-success w-50" onClick={editarUsuario}>
               Guardar Cambios
             </button>
           </div>
@@ -257,4 +243,3 @@ export default function ConsultarUsuario() {
     </div>
   );
 }
-
