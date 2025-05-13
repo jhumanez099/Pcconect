@@ -11,16 +11,25 @@ export default function CrearTipoEquipo() {
 
   const onSubmit = async (data) => {
     try {
-      await Axios.post("http://localhost:3000/api/tiposEquipos", data);
+      await Axios.post("http://localhost:3000/api/tiposEquipos", data, {
+        withCredentials: true,
+      });
       reset();
-      setGlobalError(null);
       alert("Tipo de equipo creado correctamente.");
-      // navigate("/admin/consultarTipoEquipo"); // si deseas redirigir
+      navigate("/ConsultarTipoEquipo");
     } catch (error) {
       const msg = error.response?.data?.message || "Error al crear el tipo de equipo.";
       setGlobalError(msg);
     }
   };
+
+  const campos = [
+    {
+      label: "Nombre",
+      id: "nombre_tipo_equipo",
+      type: "text",
+    },
+  ];
 
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
@@ -30,40 +39,37 @@ export default function CrearTipoEquipo() {
           <div className="row mb-4 gx-5">
             <div className="col-12 d-flex justify-content-between align-items-center mb-3">
               <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
-              <h1 className="text-center w-100 mb-0">Crear Tipo de Equipo</h1>
+              <h1 className="text-center w-100 mb-0">Crear tipo de equipo</h1>
             </div>
           </div>
 
           {globalError && <div className="alert alert-danger">{globalError}</div>}
 
           <form onSubmit={handleSubmit(onSubmit)} className="px-3">
-            <div className="mb-4 row align-items-center">
-              <label htmlFor="nombre_tipo_equipo" className="col-sm-4 col-form-label text-end">
-                Nombre:
-              </label>
-              <div className="col-sm-8">
-                <input
-                  type="text"
-                  className={`form-control ${errors.nombre_tipo_equipo ? "is-invalid" : ""}`}
-                  id="nombre_tipo_equipo"
-                  {...register("nombre_tipo_equipo", {
-                    required: "El nombre es obligatorio",
-                    minLength: {
-                      value: 3,
-                      message: "Debe tener al menos 3 caracteres",
-                    },
-                  })}
-                />
-                {errors.nombre_tipo_equipo && (
-                  <div className="invalid-feedback">{errors.nombre_tipo_equipo.message}</div>
-                )}
+            {campos.map((field, index) => (
+              <div className="mb-4 row align-items-center" key={index}>
+                <label htmlFor={field.id} className="col-sm-4 col-form-label text-end">{field.label}:</label>
+                <div className="col-sm-8">
+                  <input
+                    type={field.type}
+                    className={`form-control ${errors[field.id] ? "is-invalid" : ""}`}
+                    id={field.id}
+                    {...register(field.id, {
+                      required: `${field.label} es obligatorio`,
+                      minLength: {
+                        value: 3,
+                        message: "Debe tener al menos 3 caracteres",
+                      },
+                    })}
+                  />
+                  {errors[field.id] && (
+                    <div className="invalid-feedback">{errors[field.id].message}</div>
+                  )}
+                </div>
               </div>
-            </div>
-
+            ))}
             <div className="text-center">
-              <button type="submit" className="btn btn-success px-4 py-2">
-                Crear
-              </button>
+              <button type="submit" className="btn btn-success px-4 py-2">Crear</button>
             </div>
           </form>
         </div>

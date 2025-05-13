@@ -165,7 +165,7 @@ export default function ConsultarUsuario() {
         ariaHideApp={false}
       >
         <div className="modal-content">
-          <div className="modal-header justify-content-center">
+          <div className="modal-header justify-content-center mb-3">
             <h5 className="modal-title text-center w-100">Editar Usuario</h5>
             <button className="btn-close position-absolute end-0 me-3" onClick={closeModal}></button>
           </div>
