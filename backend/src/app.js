@@ -47,7 +47,7 @@ app.use('/api', usuarioRoutes);
 app.use('/api', pedidoRoutes);
 app.use('/api', detallePedidoRoutes);
 
-// ✅ Manejo de errores (opcional)
+// ✅ Manejo de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: "Internal Server Error", error: err.message });

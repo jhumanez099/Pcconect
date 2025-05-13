@@ -1,35 +1,43 @@
 /* Fondo del overlay */
 .custom-overlay {
-  background-color: rgba(0, 0, 0, 0.6); /* Ajuste de opacidad */
+  background-color: rgba(0, 0, 0, 0.3);
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: fixed;
-  inset: 0;
-  z-index: 1050; /* Asegúrate de que el modal esté encima */
 }
+
+
 
 /* Estilo del modal (contenido del modal) */
 .custom-modal {
-  max-width: 100%; /* Asegurarse de que el modal sea responsivo */
-  width: 600px; /* Tamaño estándar, puedes cambiarlo */
-  margin: 0 20px;
-  position: relative;
-  border-radius: 10px; /* Bordes redondeados */
-  border: 1px solid #dee2e6; /* Borde sutil */
-  background-color: white; /* Fondo blanco */
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-  opacity: 1 !important;
+  background-color: white;
+  max-width: 600px;
+  width: 90%;
+  margin: 5% auto;
   padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 /* Estilo responsivo */
-@media (max-width: 768px) {
+@media (max-width: 576px) {
   .custom-modal {
-    width: 90%; /* Modal más grande en pantallas pequeñas */
-    max-width: 400px;
+    width: 95%;
+    max-width: 100%;
+    padding: 10px;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
   }
 }
+
 
 /* Personalizar encabezado del modal */
 .modal-header {
@@ -58,6 +66,7 @@
 .modal-body {
   padding: 1.5rem;
   color: #343a40;
+  max-height: 70vh;
 }
 
 /* Estilo para el pie del modal */

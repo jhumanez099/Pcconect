@@ -17,6 +17,7 @@ import ConsultarTipoPedido from './Pages/Admin/ConsultarTipoPedido';
 import Login from './Pages/login/login';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import Logout from './components/Logout';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Routes>
           {/* ✅ Ruta Pública: Login */}
           <Route path="/" element={<Login />} />
+          <Route path="/logout" element={<Logout />} />
 
           {/* ✅ Rutas Protegidas */}
           <Route path="/MenuPrincipal" element={<ProtectedRoute><MenuPrincipal /></ProtectedRoute>} />

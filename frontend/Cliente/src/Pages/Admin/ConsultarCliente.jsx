@@ -16,12 +16,8 @@ function ClienteRow({ cliente, onEliminar, onEditar }) {
       <td>{cliente.estado_cliente}</td>
       <td>
         <div className="d-flex flex-column align-items-center gap-2">
-          <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(cliente)}>
-            Editar
-          </button>
-          <button className="btn btn-danger btn-sm w-100" onClick={() => onEliminar(cliente.id_cliente)}>
-            Eliminar
-          </button>
+          <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(cliente)}>Editar</button>
+          <button className="btn btn-danger btn-sm w-100" onClick={() => onEliminar(cliente.id_cliente)}>Eliminar</button>
         </div>
       </td>
     </tr>
@@ -43,15 +39,16 @@ export default function ConsultarCliente() {
   const navigate = useNavigate();
 
   const obtenerClientes = () => {
-    Axios.get("http://localhost:3000/api/clientes")
+    Axios.get("http://localhost:3000/api/clientes", { withCredentials: true })
       .then((res) => setClientes(res.data))
       .catch(() => setError("Error al cargar los clientes."));
   };
 
   const eliminarCliente = (id) => {
-    Axios.delete(`http://localhost:3000/api/clientes/${id}`)
+    Axios.delete(`http://localhost:3000/api/clientes/${id}`, { withCredentials: true })
       .then(() => {
         setClientes((prev) => prev.filter((c) => c.id_cliente !== id));
+        alert("Cliente eliminado correctamente.");
       })
       .catch((err) => console.error(err));
   };
@@ -72,9 +69,12 @@ export default function ConsultarCliente() {
   };
 
   const editarCliente = () => {
-    Axios.put(`http://localhost:3000/api/clientes/${editingCliente.id_cliente}`, editingCliente)
+    Axios.put(`http://localhost:3000/api/clientes/${editingCliente.id_cliente}`, editingCliente, {
+      withCredentials: true,
+    })
       .then(() => {
         obtenerClientes();
+        alert("Cliente actualizado con éxito.");
         closeModal();
       })
       .catch((err) => console.error(err));
@@ -82,9 +82,7 @@ export default function ConsultarCliente() {
 
   const clientesFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase();
-    return clientes.filter((c) =>
-      c.nombre_cliente.toLowerCase().includes(texto)
-    );
+    return clientes.filter((c) => c.nombre_cliente.toLowerCase().includes(texto));
   }, [busqueda, clientes]);
 
   useEffect(() => {
@@ -115,7 +113,7 @@ export default function ConsultarCliente() {
           {error && <div className="alert alert-danger">{error}</div>}
         </div>
       </div>
-
+      
       <div className="container-fluid px-3">
         <div className="table-responsive">
           <table className="table table-striped table-hover mt-5 shadow-lg text-center">
@@ -154,54 +152,77 @@ export default function ConsultarCliente() {
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Editar Cliente"
-        className="custom-modal modal-dialog modal-dialog-centered"
-        overlayClassName="custom-overlay modal-backdrop"
+        className="custom-modal"
+        overlayClassName="custom-overlay"
         ariaHideApp={false}
       >
         <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Editar Cliente</h5>
-            <button className="btn-close" onClick={closeModal}></button>
+          {/* Encabezado centrado */}
+          <div className="modal-header justify-content-center mb-3">
+            <h5 className="modal-title text-center w-100">Editar Cliente</h5>
+            <button
+              type="button"
+              className="btn-close position-absolute end-0 me-3"
+              onClick={closeModal}
+              aria-label="Cerrar"
+            ></button>
           </div>
+
+          {/* Cuerpo del formulario */}
           <div className="modal-body">
             <form>
               {[
-                { label: "Nombre", name: "nombre_cliente" },
-                { label: "Dirección", name: "direccion_cliente" },
-                { label: "Teléfono", name: "telefono_cliente" },
-                { label: "Correo", name: "correo_cliente", type: "email" },
-                { label: "Responsable", name: "encargado_cliente" },
+                { label: "Nombre", id: "nombre_cliente" },
+                { label: "Dirección", id: "direccion_cliente" },
+                { label: "Teléfono", id: "telefono_cliente" },
+                { label: "Correo", id: "correo_cliente", type: "email" },
+                { label: "Responsable", id: "encargado_cliente" },
               ].map((field, index) => (
-                <div className="mb-3" key={index}>
-                  <label htmlFor={field.name} className="form-label">{field.label}:</label>
-                  <input
-                    type={field.type || "text"}
-                    className="form-control"
-                    id={field.name}
-                    name={field.name}
-                    value={editingCliente?.[field.name] || ""}
-                    onChange={handleChange}
-                  />
+                <div className="mb-3 row align-items-center" key={index}>
+                  <label htmlFor={field.id} className="col-sm-4 col-form-label text-end">
+                    {field.label}:
+                  </label>
+                  <div className="col-sm-8">
+                    <input
+                      type={field.type || "text"}
+                      className="form-control"
+                      id={field.id}
+                      name={field.id}
+                      value={editingCliente?.[field.id] || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               ))}
 
-              <div className="mb-3">
-                <label htmlFor="estado_cliente" className="form-label">Estado:</label>
-                <select
-                  className="form-select"
-                  id="estado_cliente"
-                  name="estado_cliente"
-                  value={editingCliente?.estado_cliente || ""}
-                  onChange={handleChange}
-                >
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                </select>
+              {/* Estado como select */}
+              <div className="mb-3 row align-items-center">
+                <label htmlFor="estado_cliente" className="col-sm-4 col-form-label text-end">
+                  Estado:
+                </label>
+                <div className="col-sm-8">
+                  <select
+                    className="form-select"
+                    id="estado_cliente"
+                    name="estado_cliente"
+                    value={editingCliente?.estado_cliente || ""}
+                    onChange={handleChange}
+                  >
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                  </select>
+                </div>
               </div>
             </form>
           </div>
+
+          {/* Botón guardar centrado */}
           <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success w-50" onClick={editarCliente}>
+            <button
+              type="button"
+              className="btn btn-success"
+              onClick={editarCliente}
+            >
               Guardar Cambios
             </button>
           </div>

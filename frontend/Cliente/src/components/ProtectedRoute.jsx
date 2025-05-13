@@ -1,23 +1,25 @@
-// src/components/ProtectedRoute.js
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import PropTypes from "prop-types";
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, redirectTo = "/" }) => {
     const { user, loading } = useContext(AuthContext);
 
-    // ✅ Mostrar un mensaje de carga mientras verifica
     if (loading) {
-        return <div>Verificando autenticación...</div>;
+        return <div>Cargando...</div>;
     }
 
-    // ✅ Si no está autenticado, redirigir a login
     if (!user) {
-        return <Navigate to="/" replace />;
+        return <Navigate to={redirectTo} replace />;
     }
 
-    // ✅ Si está autenticado, permitir acceso
     return children;
+};
+
+ProtectedRoute.propTypes = {
+    children: PropTypes.node.isRequired,
+    redirectTo: PropTypes.string,
 };
 
 export default ProtectedRoute;
