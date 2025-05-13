@@ -2,27 +2,17 @@ import Axios from "axios";
 import NavBar from "../../components/Navbar";
 import Modal from "react-modal";
 import PropTypes from "prop-types";
-import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
 
 function TipoUsuarioRow({ tipoUsuario, onEliminar, onEditar }) {
   return (
     <tr>
-      <td className="text-truncate">{tipoUsuario.nombre_tipo_usuario}</td>
+      <td>{tipoUsuario.nombre_tipo_usuario}</td>
       <td>
         <div className="d-flex flex-column align-items-center gap-2">
-          <button
-            className="btn btn-primary btn-sm w-100"
-            onClick={() => onEditar(tipoUsuario)}
-          >
-            Editar
-          </button>
-          <button
-            className="btn btn-danger btn-sm w-100"
-            onClick={() => onEliminar(tipoUsuario.id_tipo_usuario)}
-          >
-            Eliminar
-          </button>
+          <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(tipoUsuario)}>Editar</button>
+          <button className="btn btn-danger btn-sm w-100" onClick={() => onEliminar(tipoUsuario.id_tipo_usuario)}>Eliminar</button>
         </div>
       </td>
     </tr>
@@ -44,7 +34,7 @@ export default function ConsultarTipoUsuario() {
   const navigate = useNavigate();
 
   const obtenerTiposUsuario = () => {
-    Axios.get("http://localhost:3000/api/tiposUsuarios")
+    Axios.get("http://localhost:3000/api/tiposUsuarios", { withCredentials: true })
       .then((res) => {
         setTiposUsuario(res.data);
         setError(null);
@@ -55,11 +45,10 @@ export default function ConsultarTipoUsuario() {
   };
 
   const eliminarTipoUsuario = (id) => {
-    Axios.delete(`http://localhost:3000/api/tiposUsuarios/${id}`)
+    Axios.delete(`http://localhost:3000/api/tiposUsuarios/${id}`, { withCredentials: true })
       .then(() => {
-        setTiposUsuario((prev) =>
-          prev.filter((t) => t.id_tipo_usuario !== id)
-        );
+        setTiposUsuario((prev) => prev.filter((t) => t.id_tipo_usuario !== id));
+        alert("Tipo de usuario eliminado correctamente.");
       })
       .catch((err) => console.error(err));
   };
@@ -80,16 +69,12 @@ export default function ConsultarTipoUsuario() {
   };
 
   const editarTipoUsuario = () => {
-    if (!editingTipo.nombre_tipo_usuario.trim()) {
-      alert("El nombre no puede estar vacío.");
-      return;
-    }
-
-    Axios.put(`http://localhost:3000/api/tiposUsuarios/${editingTipo.id_tipo_usuario}`, {
-      nombre_tipo_usuario: editingTipo.nombre_tipo_usuario,
+    Axios.put(`http://localhost:3000/api/tiposUsuarios/${editingTipo.id_tipo_usuario}`, editingTipo, {
+      withCredentials: true,
     })
       .then(() => {
         obtenerTiposUsuario();
+        alert("Tipo de usuario actualizado con éxito.");
         closeModal();
       })
       .catch((err) => console.error(err));
@@ -97,9 +82,7 @@ export default function ConsultarTipoUsuario() {
 
   const tiposFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase();
-    return tiposUsuario.filter((t) =>
-      t.nombre_tipo_usuario.toLowerCase().includes(texto)
-    );
+    return tiposUsuario.filter((t) => t.nombre_tipo_usuario.toLowerCase().includes(texto));
   }, [busqueda, tiposUsuario]);
 
   useEffect(() => {
@@ -113,12 +96,7 @@ export default function ConsultarTipoUsuario() {
         <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 bg-white rounded card shadow p-4 m-4">
           <div className="row gx-5">
             <div className="col-12 d-flex justify-content-between align-items-center mb-3">
-              <button
-                onClick={() => navigate("/MenuPrincipal")}
-                className="btn btn-primary btn-sm"
-              >
-                ← Regresar
-              </button>
+              <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
               <h1 className="text-center w-100 mb-0">Consultar tipos de usuario</h1>
             </div>
           </div>
@@ -169,36 +147,38 @@ export default function ConsultarTipoUsuario() {
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Editar Tipo de Usuario"
-        className="custom-modal modal-dialog modal-dialog-centered"
-        overlayClassName="custom-overlay modal-backdrop"
+        className="custom-modal"
+        overlayClassName="custom-overlay"
         ariaHideApp={false}
       >
         <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Editar Tipo de Usuario</h5>
-            <button className="btn-close" onClick={closeModal}></button>
+          <div className="modal-header justify-content-center mb-3">
+            <h5 className="modal-title text-center w-100">Editar Tipo de Usuario</h5>
+            <button className="btn-close position-absolute end-0 me-3" onClick={closeModal}></button>
           </div>
           <div className="modal-body">
             {editingTipo && (
               <form>
-                <div className="mb-3">
-                  <label htmlFor="nombre_tipo_usuario" className="form-label">
+                <div className="mb-3 row align-items-center">
+                  <label htmlFor="nombre_tipo_usuario" className="col-sm-4 col-form-label text-end">
                     Nombre:
                   </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="nombre_tipo_usuario"
-                    name="nombre_tipo_usuario"
-                    value={editingTipo.nombre_tipo_usuario || ""}
-                    onChange={handleChange}
-                  />
+                  <div className="col-sm-8">
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="nombre_tipo_usuario"
+                      name="nombre_tipo_usuario"
+                      value={editingTipo.nombre_tipo_usuario || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               </form>
             )}
           </div>
           <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success w-50" onClick={editarTipoUsuario}>
+            <button className="btn btn-success " onClick={editarTipoUsuario}>
               Guardar Cambios
             </button>
           </div>

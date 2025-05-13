@@ -15,23 +15,16 @@ const handleError = (res, status, message, error = null) => {
   return res.status(status).json({ message });
 };
 
-const validarCampo = (campo) => {
-  return (
-    campo !== undefined && campo !== null && campo.toString().trim() !== ""
-  );
-};
-
-// 🟩 Crear tipo de usuario
 const crearTipoUsuario = async (req, res) => {
   const { nombre_tipo_usuario } = req.body;
 
-  if (!validarCampo(nombre_tipo_usuario)) {
+  if (!nombre_tipo_usuario || nombre_tipo_usuario.trim() === "") {
     return handleError(res, 400, ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   try {
     const result = await TipoUsuario.crear({ nombre_tipo_usuario });
-    return res.status(201).json({
+    res.status(201).json({
       message: "Tipo de usuario creado con éxito",
       tipoUsuarioId: result.insertId,
     });
@@ -48,17 +41,15 @@ const crearTipoUsuario = async (req, res) => {
   }
 };
 
-// 🟦 Consultar todos
 const consultarTiposUsuario = async (_req, res) => {
   try {
     const tipos = await TipoUsuario.obtenerTodos();
-    return res.status(200).json(tipos);
+    res.status(200).json(tipos);
   } catch (error) {
     return handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
-// 🟨 Actualizar tipo de usuario
 const actualizarTipoUsuario = async (req, res) => {
   const id = req.params.id;
   const { nombre_tipo_usuario } = req.body;
@@ -83,27 +74,22 @@ const actualizarTipoUsuario = async (req, res) => {
       return handleError(res, 404, ERROR_MESSAGES.USER_TYPE_NOT_FOUND);
     }
 
-    return res
-      .status(200)
-      .json({ message: "Tipo de usuario actualizado con éxito." });
+    res.status(200).json({ message: "Tipo de usuario actualizado con éxito." });
   } catch (error) {
     return handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
-// 🟥 Eliminar tipo de usuario
 const eliminarTipoUsuario = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const eliminado = await TipoUsuario.eliminar(id);
-    if (eliminado.affectedRows === 0) {
+    const resultado = await TipoUsuario.eliminar(id);
+    if (resultado.affectedRows === 0) {
       return handleError(res, 404, ERROR_MESSAGES.USER_TYPE_NOT_FOUND);
     }
 
-    return res
-      .status(200)
-      .json({ message: "Tipo de usuario eliminado con éxito." });
+    res.status(200).json({ message: "Tipo de usuario eliminado con éxito." });
   } catch (error) {
     return handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
   }
