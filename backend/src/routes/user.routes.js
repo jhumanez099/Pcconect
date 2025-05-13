@@ -8,9 +8,8 @@ const {
 
 const router = express.Router();
 
-router.post("/usuarios", crearUsuario);
-router.get("/usuarios", consultarUsuarios);
-router.put("/usuarios/:id", actualizarUsuario);
-router.delete("/usuarios/:id", eliminarUsuario);
+router.route("/usuarios").post(crearUsuario).get(consultarUsuarios);
+
+router.route("/usuarios/:id").put(actualizarUsuario).delete(eliminarUsuario);
 
 module.exports = router;

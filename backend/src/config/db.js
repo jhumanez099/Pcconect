@@ -2,11 +2,11 @@
 const mysql = require("mysql2/promise");
 require("dotenv").config(); // ✅ Asegúrate de cargar dotenv primero
 
-console.log("✅ Verificando variables de entorno:");
-console.log("DB_HOST:", process.env.DB_HOST);
-console.log("DB_USER:", process.env.DB_USER);
-console.log("DB_PASSWORD:", process.env.DB_PASSWORD);
-console.log("DB_NAME:", process.env.DB_NAME);
+// console.log("✅ Verificando variables de entorno:");
+// console.log("DB_HOST:", process.env.DB_HOST);
+// console.log("DB_USER:", process.env.DB_USER);
+// console.log("DB_PASSWORD:", process.env.DB_PASSWORD);
+// console.log("DB_NAME:", process.env.DB_NAME);
 
 // Verificar que las variables de entorno están cargadas
 if (!process.env.DB_NAME) {

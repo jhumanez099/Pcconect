@@ -1,24 +1,23 @@
 const express = require("express");
 const {
-  crearDetallePedido,
-  consultarDetallesPedidos,
-  consultarUnDetallePedido,
-  actualizarDetallePedido,
-  eliminarDetallePedido,
+  crear_detalle_pedido,
+  consultar_detalles_pedido,
+  actualizar_detalle_pedido,
+  eliminar_detalle_pedido,
 } = require("../controllers/orderDetail.controller.js");
 
 const router = express.Router();
 
 // Define la ruta para crear un detalle del pedido
-router.post("/detalles", crearDetallePedido);
+router.post("/detalles", crear_detalle_pedido);
 
 // Define la ruta para consultar todos los detalles de los pedidos
-router.get("/detalles", consultarDetallesPedidos);
+router.get("/detalles", consultar_detalles_pedido);
 
 // Define la ruta para actualizar un detalle del pedido
-router.put("/detalles/:id", actualizarDetallePedido);
+router.put("/detalles/:id", actualizar_detalle_pedido);
 
 // Define la ruta para eliminar un detalle del pedido
-router.delete("/detalles/:id", eliminarDetallePedido);
+router.delete("/detalles/:id", eliminar_detalle_pedido);
 
 module.exports = router;

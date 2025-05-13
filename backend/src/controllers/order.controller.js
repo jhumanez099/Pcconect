@@ -11,133 +11,111 @@ const ERROR_MESSAGES = {
 
 const handleError = (res, status, message, error = null) => {
   console.error(message, error);
-  res.status(status).json({ message, error: error?.message });
+  res.status(status).json({ message });
 };
 
-const validateFields = (fields) => {
-  return Object.values(fields).every(
+const validateFields = (fields) =>
+  Object.values(fields).every(
     (field) => field !== undefined && field !== null && field !== ""
   );
-};
 
-const crearPedidos = async (req, res) => {
+const crear_pedido = async (req, res) => {
   const fields = {
-    fechaPedido: req.body.fechaPedido,
-    fechaInicioPedido: req.body.fechaInicioPedido,
-    fechaFinPedido: req.body.fechaFinPedido,
-    precioTotalPedido: req.body.precioTotalPedido,
-    estadoPedido: req.body.estadoPedido,
-    cliente: req.body.cliente,
-    usuario: req.body.usuario,
-    tipoPedido: req.body.tipoPedido,
-    motivoPedido: req.body.motivoPedido,
+    fecha_inicio_pedido: req.body.fecha_inicio_pedido,
+    fecha_fin_pedido: req.body.fecha_fin_pedido,
+    precio_total_pedido: req.body.precio_total_pedido,
+    estado_pedido: req.body.estado_pedido,
+    id_cliente: req.body.id_cliente,
+    id_usuario: req.body.id_usuario,
+    id_tipo_pedido: req.body.id_tipo_pedido,
+    motivo_pedido: req.body.motivo_pedido,
   };
 
   if (!validateFields(fields)) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
+    return handleError(res, 400, ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   try {
-    const pedidoNuevo = await Pedido.crear(fields);
+    const result = await Pedido.crear(fields);
     res.status(201).json({
       message: "El pedido se creó con éxito",
-      pedidoId: pedidoNuevo.insertId,
+      id_pedido: result.insertId,
     });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
   }
 };
 
-const consultarPedidos = async (req, res) => {
+const consultar_pedidos = async (_req, res) => {
   try {
     const pedidos = await Pedido.obtenerTodos();
     res.status(200).json(pedidos);
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
-const actualizarPedido = async (req, res) => {
-  const idPedido = req.params.id;
+const actualizar_pedido = async (req, res) => {
+  const id_pedido = req.params.id;
+
   const fields = {
-    fechaPedido: req.body.fechaPedido,
-    fechaInicioPedido: req.body.fechaInicioPedido,
-    fechaFinPedido: req.body.fechaFinPedido,
-    precioTotalPedido: req.body.precioTotalPedido,
-    estadoPedido: req.body.estadoPedido,
-    cliente: req.body.cliente,
-    usuario: req.body.usuario,
-    tipoPedido: req.body.tipoPedido,
-    motivoPedido: req.body.motivoPedido,
+    fecha_inicio_pedido: req.body.fecha_inicio_pedido,
+    fecha_fin_pedido: req.body.fecha_fin_pedido,
+    precio_total_pedido: req.body.precio_total_pedido,
+    estado_pedido: req.body.estado_pedido,
+    id_cliente: req.body.id_cliente,
+    id_usuario: req.body.id_usuario,
+    motivo_pedido: req.body.motivo_pedido,
+    id_tipo_pedido: req.body.id_tipo_pedido,
   };
 
+  console.log(fields)
   try {
-    // Obtener el pedido actual desde la base de datos
-    const pedidoExistente = await Pedido.obtenerPorId(idPedido);
-
-    // Si no existe el pedido, retornar error
-    if (!pedidoExistente || pedidoExistente.length === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+    const pedido_actual = await Pedido.obtenerPorId(id_pedido);
+    if (!pedido_actual || pedido_actual.length === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_NOT_FOUND);
     }
 
-    // Filtrar solo los campos modificados
-    const camposModificados = {};
-    Object.keys(fields).forEach((key) => {
-      if (fields[key] !== pedidoExistente[0][key]) {
-        camposModificados[key] = fields[key];
+    const cambios = {};
+    for (const key in fields) {
+      if (fields[key] !== pedido_actual[0][key]) {
+        cambios[key] = fields[key];
       }
-    });
-
-    // Si no hay campos modificados, retornar mensaje de sin cambios
-    if (Object.keys(camposModificados).length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No se realizaron cambios en el pedido." });
     }
 
-    // Actualizar solo los campos modificados
-    const pedidoActualizado = await Pedido.actualizar(
-      idPedido,
-      camposModificados
-    );
+    if (Object.keys(cambios).length === 0) {
+      return res.status(200).json({ message: "No se realizaron cambios." });
+    }
 
-    if (pedidoActualizado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+    const actualizado = await Pedido.actualizar(id_pedido, cambios);
+    if (actualizado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_NOT_FOUND);
     }
 
     res.status(200).json({ message: "Pedido actualizado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
-const eliminarPedido = async (req, res) => {
-  const idPedido = req.params.id;
-
-  if (!idPedido) {
-    return res.status(400).json({ message: "El ID del pedido es requerido." });
-  }
+const eliminar_pedido = async (req, res) => {
+  const id_pedido = req.params.id;
 
   try {
-    const pedidoEliminado = await Pedido.eliminar(idPedido);
-
-    if (pedidoEliminado.affectedRows === 0) {
-      return res.status(404).json({ message: ERROR_MESSAGES.ORDER_NOT_FOUND });
+    const result = await Pedido.eliminar(id_pedido);
+    if (result.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_NOT_FOUND);
     }
 
     res.status(200).json({ message: "Pedido eliminado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
   }
 };
 
 module.exports = {
-  crearPedidos,
-  consultarPedidos,
-  actualizarPedido,
-  eliminarPedido,
+  crear_pedido,
+  consultar_pedidos,
+  actualizar_pedido,
+  eliminar_pedido,
 };

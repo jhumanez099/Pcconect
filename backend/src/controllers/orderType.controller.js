@@ -15,7 +15,6 @@ const handleError = (res, status, message, error = null) => {
   return res.status(status).json({ message });
 };
 
-// 🟩 Crear
 const crearTipoPedido = async (req, res) => {
   const { nombre_tipo_pedido } = req.body;
 
@@ -42,7 +41,6 @@ const crearTipoPedido = async (req, res) => {
   }
 };
 
-// 🟦 Consultar todos
 const consultarTipoPedido = async (_req, res) => {
   try {
     const tipos = await TipoPedido.obtenerTodos();
@@ -52,7 +50,6 @@ const consultarTipoPedido = async (_req, res) => {
   }
 };
 
-// 🟨 Actualizar
 const actualizarTipoPedido = async (req, res) => {
   const id = req.params.id;
   const { nombre_tipo_pedido } = req.body;
@@ -73,7 +70,6 @@ const actualizarTipoPedido = async (req, res) => {
     }
 
     const resultado = await TipoPedido.actualizar(id, cambios);
-
     if (resultado.affectedRows === 0) {
       return handleError(res, 404, ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND);
     }
@@ -84,17 +80,11 @@ const actualizarTipoPedido = async (req, res) => {
   }
 };
 
-// 🟥 Eliminar
 const eliminarTipoPedido = async (req, res) => {
   const id = req.params.id;
 
-  if (!id) {
-    return handleError(res, 400, "El ID del tipo de pedido es requerido.");
-  }
-
   try {
     const resultado = await TipoPedido.eliminar(id);
-
     if (resultado.affectedRows === 0) {
       return handleError(res, 404, ERROR_MESSAGES.ORDER_TYPE_NOT_FOUND);
     }

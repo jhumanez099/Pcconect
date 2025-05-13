@@ -1,5 +1,5 @@
-// src/context/AuthContext.js
-import React, { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect } from "react";
+import PropTypes from "prop-types";
 
 export const AuthContext = createContext();
 
@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                const response = await fetch("http://localhost:4000/api/auth/profile", {
+                const response = await fetch("http://localhost:3000/api/auth/profile", {
                     method: "GET",
                     credentials: "include",
                 });
@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }) => {
                 setLoading(false); // ✅ Finalizar la carga
             }
         };
-
         checkAuth();
     }, []);
 
@@ -38,3 +37,6 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+AuthProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+};

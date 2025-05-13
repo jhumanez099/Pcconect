@@ -1,23 +1,32 @@
-// src/hooks/useAuth.js
-import { useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
+import { AuthContext } from "../context/AuthContext";
 
-export const useAuth = () => {
-    const [authenticated, setAuthenticated] = useState(false);
+export default function useAuth() {
+    const { user, setUser } = useContext(AuthContext);
 
     useEffect(() => {
-        fetch("http://localhost:4000/api/profile", {
-            credentials: "include",
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.user) {
-                    setAuthenticated(true);
-                } else {
-                    setAuthenticated(false);
-                    window.location.href = "/"; // Redirigir al login
-                }
-            });
-    }, []);
+        const obtenerPerfil = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/api/auth/profile", {
+                    credentials: "include",
+                });
 
-    return authenticated;
-};
+                if (res.ok) {
+                    const data = await res.json();
+                    setUser(data.user);
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("Error al verificar sesión:", error);
+                setUser(null);
+            }
+        };
+
+        if (!user) {
+            obtenerPerfil();
+        }
+    }, [user, setUser]);
+
+    return { user };
+}
