@@ -18,6 +18,8 @@ import Login from './Pages/login/login';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Logout from './components/Logout';
+import CrearPedido from './Pages/Admin/CrearPedido';
+import ConsultarPedido from './Pages/Admin/ConsultarPedido';
 
 function App() {
   return (
@@ -42,6 +44,8 @@ function App() {
           <Route path="/ConsultarEquipo" element={<ProtectedRoute><ConsultarEquipo /></ProtectedRoute>} />
           <Route path="/CrearTipoPedido" element={<ProtectedRoute><CrearTipoPedido /></ProtectedRoute>} />
           <Route path="/ConsultarTipoPedido" element={<ProtectedRoute><ConsultarTipoPedido /></ProtectedRoute>} />
+          <Route path="/CrearPedido" element={<ProtectedRoute><CrearPedido /></ProtectedRoute>} />
+          <Route path="/ConsultarPedido" element={<ProtectedRoute><ConsultarPedido /></ProtectedRoute>} />
 
           {/* ✅ Ruta por defecto para redirigir al login si no está autenticado */}
           <Route path="*" element={<Navigate to="/" replace />} />

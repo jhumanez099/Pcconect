@@ -2,13 +2,13 @@ import Axios from "axios";
 import NavBar from "../../components/Navbar";
 import Modal from "react-modal";
 import PropTypes from "prop-types";
-import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
 
 function TipoPedidoRow({ tipoPedido, onEliminar, onEditar }) {
   return (
     <tr>
-      <td className="text-truncate">{tipoPedido.nombre_tipo_pedido}</td>
+      <td>{tipoPedido.nombre_tipo_pedido}</td>
       <td>
         <div className="d-flex flex-column align-items-center gap-2">
           <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(tipoPedido)}>Editar</button>
@@ -34,22 +34,21 @@ export default function ConsultarTipoPedido() {
   const navigate = useNavigate();
 
   const obtenerTiposPedido = () => {
-    Axios.get("http://localhost:3000/api/tiposPedidos")
-      .then((res) => {
+    Axios.get("http://localhost:3000/api/tiposPedidos", { withCredentials: true })
+      .then(res => {
         setTiposPedido(res.data);
         setError(null);
       })
-      .catch(() => {
-        setError("Error al cargar los tipos de pedido.");
-      });
+      .catch(() => setError("Error al cargar los tipos de pedido."));
   };
 
   const eliminarTipoPedido = (id) => {
-    Axios.delete(`http://localhost:3000/api/tiposPedidos/${id}`)
+    Axios.delete(`http://localhost:3000/api/tiposPedidos/${id}`, { withCredentials: true })
       .then(() => {
-        setTiposPedido((prev) => prev.filter((t) => t.id_tipo_pedido !== id));
+        setTiposPedido(prev => prev.filter(t => t.id_tipo_pedido !== id));
+        alert("Tipo de pedido eliminado correctamente.");
       })
-      .catch((err) => console.error(err));
+      .catch(err => console.error(err));
   };
 
   const openModal = (tipo) => {
@@ -64,30 +63,26 @@ export default function ConsultarTipoPedido() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEditingTipo((prev) => ({ ...prev, [name]: value }));
+    setEditingTipo(prev => ({ ...prev, [name]: value }));
   };
 
   const editarTipoPedido = () => {
-    if (!editingTipo.nombre_tipo_pedido.trim()) {
-      alert("El nombre no puede estar vacío.");
-      return;
-    }
-
-    Axios.put(`http://localhost:3000/api/tiposPedidos/${editingTipo.id_tipo_pedido}`, {
-      nombre_tipo_pedido: editingTipo.nombre_tipo_pedido,
-    })
+    Axios.put(
+      `http://localhost:3000/api/tiposPedidos/${editingTipo.id_tipo_pedido}`,
+      { nombre_tipo_pedido: editingTipo.nombre_tipo_pedido },
+      { withCredentials: true }
+    )
       .then(() => {
         obtenerTiposPedido();
+        alert("Tipo de pedido actualizado con éxito.");
         closeModal();
       })
-      .catch((err) => console.error(err));
+      .catch(err => console.error(err));
   };
 
   const tiposFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase();
-    return tiposPedido.filter((t) =>
-      t.nombre_tipo_pedido.toLowerCase().includes(texto)
-    );
+    return tiposPedido.filter(t => t.nombre_tipo_pedido.toLowerCase().includes(texto));
   }, [busqueda, tiposPedido]);
 
   useEffect(() => {
@@ -110,7 +105,7 @@ export default function ConsultarTipoPedido() {
             <input
               type="text"
               className="form-control"
-              placeholder="Buscar tipo de pedido"
+              placeholder="Buscar por nombre"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
@@ -152,28 +147,32 @@ export default function ConsultarTipoPedido() {
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Editar Tipo de Pedido"
-        className="custom-modal modal-dialog modal-dialog-centered"
-        overlayClassName="custom-overlay modal-backdrop"
+        className="custom-modal"
+        overlayClassName="custom-overlay"
         ariaHideApp={false}
       >
         <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title">Editar Tipo de Pedido</h5>
-            <button className="btn-close" onClick={closeModal}></button>
+          <div className="modal-header justify-content-center mb-3">
+            <h5 className="modal-title text-center w-100">Editar Tipo de Pedido</h5>
+            <button className="btn-close position-absolute end-0 me-3" onClick={closeModal}></button>
           </div>
           <div className="modal-body">
             {editingTipo && (
               <form>
-                <div className="mb-3">
-                  <label htmlFor="nombre_tipo_pedido" className="form-label">Nombre:</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="nombre_tipo_pedido"
-                    name="nombre_tipo_pedido"
-                    value={editingTipo.nombre_tipo_pedido || ""}
-                    onChange={handleChange}
-                  />
+                <div className="mb-3 row align-items-center">
+                  <label htmlFor="nombre_tipo_pedido" className="col-sm-4 col-form-label text-end">
+                    Nombre:
+                  </label>
+                  <div className="col-sm-8">
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="nombre_tipo_pedido"
+                      name="nombre_tipo_pedido"
+                      value={editingTipo.nombre_tipo_pedido || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               </form>
             )}

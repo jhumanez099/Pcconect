@@ -4,7 +4,7 @@ const ERROR_MESSAGES = {
   REQUIRED_FIELDS: "Todos los campos son obligatorios.",
   ORDER_DETAIL_NOT_FOUND: "Detalle del pedido no encontrado.",
   CREATION_ERROR: "Error al crear el detalle del pedido.",
-  RETRIEVAL_ERROR: "Error al consultar el detalle del pedido.",
+  RETRIEVAL_ERROR: "Error al consultar los detalles del pedido.",
   UPDATE_ERROR: "Error al actualizar el detalle del pedido.",
   DELETE_ERROR: "Error al eliminar el detalle del pedido.",
 };
@@ -14,165 +14,141 @@ const handleError = (res, status, message, error = null) => {
   res.status(status).json({ message });
 };
 
-const validateFields = (fields) => {
-  return fields.every(
+const validateFields = (fields) =>
+  Object.values(fields).every(
     (field) => field !== undefined && field !== null && field !== ""
   );
-};
 
-const crearDetallePedido = async (req, res) => {
+const crear_detalle_pedido = async (req, res) => {
   const {
     pedido,
     equipo,
-    cantidadDetallePedido,
-    precioUnitarioDetallePedido,
-    fechaInicioDetallePedido,
-    fechaFinDetallePedido,
+    cantidad_detalle_pedido,
+    precio_unitario_detalle_pedido,
+    fecha_inicio_detalle_pedido,
+    fecha_fin_detalle_pedido,
   } = req.body;
-  const subtotalDetallePedido =
-    cantidadDetallePedido * precioUnitarioDetallePedido;
+
+  const subtotal_detalle_pedido =
+    cantidad_detalle_pedido * precio_unitario_detalle_pedido;
 
   if (
     !validateFields([
       pedido,
       equipo,
-      cantidadDetallePedido,
-      precioUnitarioDetallePedido,
-      fechaInicioDetallePedido,
-      fechaFinDetallePedido,
+      cantidad_detalle_pedido,
+      precio_unitario_detalle_pedido,
+      fecha_inicio_detalle_pedido,
+      fecha_fin_detalle_pedido,
     ])
   ) {
-    return res.status(400).json({ message: ERROR_MESSAGES.REQUIRED_FIELDS });
+    return handleError(res, 400, ERROR_MESSAGES.REQUIRED_FIELDS);
   }
 
   try {
-    const fields = {
+    const campos = {
       pedido,
       equipo,
-      cantidadDetallePedido,
-      precioUnitarioDetallePedido,
-      subtotalDetallePedido,
-      fechaInicioDetallePedido,
-      fechaFinDetallePedido,
+      cantidad_detalle_pedido,
+      precio_unitario_detalle_pedido,
+      subtotal_detalle_pedido,
+      fecha_inicio_detalle_pedido,
+      fecha_fin_detalle_pedido,
     };
 
-    const detallePedidoNuevo = await DetallePedido.crear(fields);
+    const resultado = await DetallePedido.crear(campos);
     res.status(201).json({
       message: "El detalle del pedido se creó con éxito",
-      detallePedidoId: detallePedidoNuevo.insertId,
+      id_detalle_pedido: resultado.insertId,
     });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.CREATION_ERROR, error);
   }
 };
 
-const consultarDetallesPedidos = async (req, res) => {
+const consultar_detalles_pedido = async (_req, res) => {
   try {
-    const detallesPedidos = await DetallePedido.obtenerTodos();
-    res.status(200).json(detallesPedidos);
+    const detalles = await DetallePedido.obtenerTodos();
+    res.status(200).json(detalles);
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.RETRIEVAL_ERROR, error);
   }
 };
 
-const actualizarDetallePedido = async (req, res) => {
-  const idDetallePedido = req.params.id;
+const actualizar_detalle_pedido = async (req, res) => {
+  const id = req.params.id;
   const {
     pedido,
     equipo,
-    cantidadDetallePedido,
-    precioUnitarioDetallePedido,
-    fechaInicioDetallePedido,
-    fechaFinDetallePedido,
+    cantidad_detalle_pedido,
+    precio_unitario_detalle_pedido,
+    fecha_inicio_detalle_pedido,
+    fecha_fin_detalle_pedido,
   } = req.body;
-  const subtotalDetallePedido =
-    cantidadDetallePedido * precioUnitarioDetallePedido;
 
-  const fields = {
-    pedido,
-    equipo,
-    cantidadDetallePedido,
-    precioUnitarioDetallePedido,
-    subtotalDetallePedido,
-    fechaInicioDetallePedido,
-    fechaFinDetallePedido,
-  };
+  const subtotal_detalle_pedido =
+    cantidad_detalle_pedido * precio_unitario_detalle_pedido;
 
   try {
-    // Obtener el detalle del pedido actual desde la base de datos
-    const detallePedidoExistente = await DetallePedido.obtenerPorId(idDetallePedido);
-
-    // Si no existe el detalle del pedido, retornar error
-    if (!detallePedidoExistente || detallePedidoExistente.length === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_DETAIL_NOT_FOUND });
+    const actual = await DetallePedido.obtenerPorId(id);
+    if (!actual || actual.length === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_DETAIL_NOT_FOUND);
     }
 
-    // Filtrar solo los campos modificados
-    const camposModificados = {};
-    Object.keys(fields).forEach((key) => {
-      if (fields[key] !== detallePedidoExistente[0][key]) {
-        camposModificados[key] = fields[key];
+    const nuevos = {
+      pedido,
+      equipo,
+      cantidad_detalle_pedido,
+      precio_unitario_detalle_pedido,
+      subtotal_detalle_pedido,
+      fecha_inicio_detalle_pedido,
+      fecha_fin_detalle_pedido,
+    };
+
+    const cambios = {};
+    for (const key in nuevos) {
+      if (nuevos[key] !== actual[0][key]) {
+        cambios[key] = nuevos[key];
       }
-    });
-
-    // Si no hay campos modificados, retornar mensaje de sin cambios
-    if (Object.keys(camposModificados).length === 0) {
-      return res
-        .status(200)
-        .json({ message: "No se realizaron cambios en el detalle del pedido." });
     }
 
-    // Actualizar solo los campos modificados
-    const detallePedidoActualizado = await DetallePedido.actualizar(
-      idDetallePedido,
-      camposModificados
-    );
-
-    if (detallePedidoActualizado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_DETAIL_NOT_FOUND });
+    if (Object.keys(cambios).length === 0) {
+      return res.status(200).json({ message: "No se realizaron cambios." });
     }
 
-    res.status(200).json({ message: "Detalle del pedido actualizado con éxito." });
+    const actualizado = await DetallePedido.actualizar(id, cambios);
+    if (actualizado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_DETAIL_NOT_FOUND);
+    }
+
+    res
+      .status(200)
+      .json({ message: "Detalle del pedido actualizado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
 
-const eliminarDetallePedido = async (req, res) => {
-  const idDetallePedido = req.params.id;
-
-  if (!idDetallePedido) {
-    return res
-      .status(400)
-      .json({ message: "El ID del detalle del pedido es requerido." });
-  }
+const eliminar_detalle_pedido = async (req, res) => {
+  const id = req.params.id;
 
   try {
-    const detallePedidoEliminado = await DetallePedido.eliminar(
-      idDetallePedido
-    );
-
-    if (detallePedidoEliminado.affectedRows === 0) {
-      return res
-        .status(404)
-        .json({ message: ERROR_MESSAGES.ORDER_DETAIL_NOT_FOUND });
+    const eliminado = await DetallePedido.eliminar(id);
+    if (eliminado.affectedRows === 0) {
+      return handleError(res, 404, ERROR_MESSAGES.ORDER_DETAIL_NOT_FOUND);
     }
 
     res
       .status(200)
       .json({ message: "Detalle del pedido eliminado con éxito." });
   } catch (error) {
-    handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
+    return handleError(res, 500, ERROR_MESSAGES.DELETE_ERROR, error);
   }
 };
 
 module.exports = {
-  crearDetallePedido,
-  consultarDetallesPedidos,
-  actualizarDetallePedido,
-  eliminarDetallePedido,
+  crear_detalle_pedido,
+  consultar_detalles_pedido,
+  actualizar_detalle_pedido,
+  eliminar_detalle_pedido,
 };

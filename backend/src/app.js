@@ -10,10 +10,10 @@ const clienteRoutes = require("./routes/client.routes.js");
 const tipoEquipoRoutes = require("./routes/equipmentType.routes.js");
 const equipoRoutes = require("./routes/equipment.routes.js");
 const tipoPedidoRoutes = require("./routes/orderType.routes.js");
-const tipoUsuarioRoutes = require("./routes/userType.routes.js");
-const usuarioRoutes = require("./routes/user.routes.js");
 const pedidoRoutes = require("./routes/order.routes.js");
 const detallePedidoRoutes = require("./routes/orderDetail.routes.js");
+const tipoUsuarioRoutes = require("./routes/userType.routes.js");
+const usuarioRoutes = require("./routes/user.routes.js");
 const authRoutes = require("./routes/auth.routes.js");
 
 const app = express();
@@ -41,9 +41,9 @@ app.use('/api', authMiddleware); // ✅ Aplicar el middleware de autenticación
 app.use('/api', clienteRoutes);
 app.use('/api', tipoEquipoRoutes);
 app.use('/api', equipoRoutes);
-app.use('/api', tipoPedidoRoutes);
 app.use('/api', tipoUsuarioRoutes);
 app.use('/api', usuarioRoutes);
+app.use('/api', tipoPedidoRoutes);
 app.use('/api', pedidoRoutes);
 app.use('/api', detallePedidoRoutes);
 

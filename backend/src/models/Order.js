@@ -5,9 +5,9 @@ const Pedido = {
   async crear(fields) {
     const query = `
       INSERT INTO
-        pedidos (fecha_pedido, fecha_inicio_pedido, fecha_fin_pedido, precio_total_pedido, estado_pedido, id_cliente, id_usuario, id_tipo_pedido, motivo_pedido) 
+        pedidos (fecha_inicio_pedido, fecha_fin_pedido, precio_total_pedido, estado_pedido, id_cliente, id_usuario, id_tipo_pedido, motivo_pedido) 
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     const [result] = await pool.query(query, Object.values(fields));
     return result;
@@ -54,18 +54,19 @@ const Pedido = {
   },
 
   // Actualizar un pedido
-  async actualizar(id, fields) {
-    const query = `
-      UPDATE 
-        pedidos 
-      SET 
-        fecha_pedido = ?, fecha_inicio_pedido = ?, fecha_fin_pedido = ?, precio_total_pedido = ?, estado_pedido = ?, id_cliente = ?, id_usuario = ?, id_tipo_pedido = ?, motivo_pedido = ? 
-      WHERE
-        id_pedido = ?
-    `;
-    const [result] = await pool.query(query, [...Object.values(fields), id]);
+  async actualizar(id, campos) {
+    const keys = Object.keys(campos);
+    const values = Object.values(campos);
+  
+    if (keys.length === 0) {
+      return { affectedRows: 0 }; // evitar UPDATE vacío
+    }
+  
+    const setClause = keys.map((key) => `${key} = ?`).join(", ");
+    const query = `UPDATE pedidos SET ${setClause} WHERE id_pedido = ?`;
+    const [result] = await pool.query(query, [...values, id]);
     return result;
-  },
+  },  
 
   // Eliminar un pedido
   async eliminar(id) {
