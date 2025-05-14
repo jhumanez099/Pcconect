@@ -8,8 +8,14 @@ const {
 
 const router = express.Router();
 
-router.route("/equipos").post(crearEquipo).get(consultarEquipo);
+router
+  .route("/equipos")
+  .post(crearEquipo)
+  .get(consultarEquipo);
 
-router.route("/equipos/:id").put(actualizarEquipo).delete(eliminarEquipo);
+router
+  .route("/equipos/:id")
+  .put(actualizarEquipo)
+  .delete(eliminarEquipo);
 
 module.exports = router;

@@ -8,7 +8,10 @@ const {
 
 const router = express.Router();
 
-router.route("/tiposPedidos").post(crearTipoPedido).get(consultarTipoPedido);
+router
+  .route("/tiposPedidos")
+  .post(crearTipoPedido)
+  .get(consultarTipoPedido);
 
 router
   .route("/tiposPedidos/:id")
