@@ -20,6 +20,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Logout from './components/Logout';
 import CrearPedido from './Pages/Admin/CrearPedido';
 import ConsultarPedido from './Pages/Admin/ConsultarPedido';
+import MenuCliente from './Pages/Admin/MenuCliente';
+import MenuUsuario from './Pages/Admin/MenuUsuario';
+import MenuEquipo from './Pages/Admin/MenuEquipo';
+import MenuPedido from './Pages/Admin/MenuPedido';
 
 function App() {
   return (
@@ -32,6 +36,10 @@ function App() {
 
           {/* ✅ Rutas Protegidas */}
           <Route path="/MenuPrincipal" element={<ProtectedRoute><MenuPrincipal /></ProtectedRoute>} />
+          <Route path="/MenuCliente" element={<ProtectedRoute><MenuCliente /></ProtectedRoute>} />
+          <Route path="/MenuUsuario" element={<ProtectedRoute><MenuUsuario /></ProtectedRoute>} />
+          <Route path="/MenuEquipo" element={<ProtectedRoute><MenuEquipo /></ProtectedRoute>} />
+          <Route path="/MenuPedido" element={<ProtectedRoute><MenuPedido /></ProtectedRoute>} />
           <Route path="/CrearCliente" element={<ProtectedRoute><CrearCliente /></ProtectedRoute>} />
           <Route path="/ConsultarCliente" element={<ProtectedRoute><ConsultarCliente /></ProtectedRoute>} />
           <Route path="/CrearTipoUsuario" element={<ProtectedRoute><CrearTipoUsuario /></ProtectedRoute>} />
