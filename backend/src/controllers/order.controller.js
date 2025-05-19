@@ -69,7 +69,6 @@ const actualizar_pedido = async (req, res) => {
     id_tipo_pedido: req.body.id_tipo_pedido,
   };
 
-  console.log(fields)
   try {
     const pedido_actual = await Pedido.obtenerPorId(id_pedido);
     if (!pedido_actual || pedido_actual.length === 0) {

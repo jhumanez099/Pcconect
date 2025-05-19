@@ -61,7 +61,7 @@ const consultarUsuarios = async (req, res) => {
 };
 
 const actualizarUsuario = async (req, res) => {
-  const idUsuario = req.params.id;
+  const id = req.params.id;
   const fields = {
     id_tipo_usuario: req.body.id_tipo_usuario,
     nombre_usuario: req.body.nombre_usuario,
@@ -73,7 +73,7 @@ const actualizarUsuario = async (req, res) => {
   };
 
   try {
-    const usuarioExistente = await Usuario.obtenerPorId(idUsuario);
+    const usuarioExistente = await Usuario.obtenerPorId(id);
     if (!usuarioExistente || usuarioExistente.length === 0) {
       return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
     }
@@ -96,7 +96,7 @@ const actualizarUsuario = async (req, res) => {
       10
     );
 
-    const actualizado = await Usuario.actualizar(idUsuario, camposModificados);
+    const actualizado = await Usuario.actualizar(id, camposModificados);
 
     if (actualizado.affectedRows === 0) {
       return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
@@ -109,10 +109,10 @@ const actualizarUsuario = async (req, res) => {
 };
 
 const eliminarUsuario = async (req, res) => {
-  const idUsuario = req.params.id;
+  const id = req.params.id;
 
   try {
-    const eliminado = await Usuario.eliminar(idUsuario);
+    const eliminado = await Usuario.eliminar(id);
 
     if (eliminado.affectedRows === 0) {
       return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
