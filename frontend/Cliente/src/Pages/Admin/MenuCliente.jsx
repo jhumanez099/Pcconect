@@ -10,10 +10,10 @@ export default function MenuCliente() {
   ];
 
   return (
-    <div className="min-vh-100 d-flex flex-column bg-secondary">
+    <div className="min-vh-100 d-flex flex-column">
       <NavBar />
       <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
-        <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "600px" }}>
+        <div className="w-100 rounded card shadow p-4 m-4" style={{ maxWidth: "600px" }}>
           <h2 className="text-center mb-4">Menú Cliente</h2>
           <div className="d-grid gap-3">
             {opciones.map((opcion, index) => (

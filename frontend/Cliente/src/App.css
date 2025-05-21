@@ -1,3 +1,6 @@
+body {
+  background-color: #ddeeff !important;
+}
 /* Overlay con desenfoque */
 .custom-overlay {
   position: fixed;

@@ -10,7 +10,7 @@ export default function MenuTipoEquipo() {
   ];
 
   return (
-    <div className="min-vh-100 d-flex flex-column bg-secondary">
+    <div className="min-vh-100 d-flex flex-column">
       <NavBar />
       <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
         <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "600px" }}>
