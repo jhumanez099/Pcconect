@@ -4,6 +4,7 @@ const {
   consultar_pedidos,
   actualizar_pedido,
   eliminar_pedido,
+  obtener_detalle_pedido,
 } = require("../controllers/order.controller.js");
 
 const router = express.Router();
@@ -18,5 +19,9 @@ router
   .route("/pedidos/:id")
   .put(actualizar_pedido)
   .delete( eliminar_pedido);
+
+  router
+  .route("/pedidos/:id/detalle")
+  .get(obtener_detalle_pedido)
 
 module.exports = router;

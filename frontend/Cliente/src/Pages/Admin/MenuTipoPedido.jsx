@@ -1,12 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/Navbar";
 
-export default function MenuEquipo() {
+export default function MenuTipoPedido() {
   const navigate = useNavigate();
 
   const opciones = [
-    { nombre: "Crear", ruta: "/CrearEquipo" },
-    { nombre: "Consultar", ruta: "/ConsultarEquipo" },
+    { nombre: "Crear", ruta: "/CrearTipoPedido" },
+    { nombre: "Consultar", ruta: "/ConsultarTipoPedido" },
   ];
 
   return (
@@ -14,7 +14,7 @@ export default function MenuEquipo() {
       <NavBar />
       <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
         <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "600px" }}>
-          <h2 className="text-center mb-4">Menú Equipo</h2>
+          <h2 className="text-center mb-4">Menú Tipo Pedido</h2>
           <div className="d-grid gap-3">
             {opciones.map((opcion, index) => (
               <button

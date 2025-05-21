@@ -28,49 +28,56 @@ export default function NavBar() {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light w-100">
-      <div className="container">
-        <Link className="navbar-brand" to="/">PCCONECT</Link>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
+    <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+      <div className="container-fluid px-4">
+        <Link className="navbar-brand fw-bold text-white fs-4" to="/MenuPrincipal">PCCONECT</Link>
 
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav ms-auto">
-            <li className="nav-item"><Link className="nav-link" to="/MenuClientes">Clientes</Link></li>
-            <li className="nav-item"><Link className="nav-link" to="/MenuUsuarios">Usuarios</Link></li>
-            <li className="nav-item"><Link className="nav-link" to="/MenuPedidos">Pedidos</Link></li>
-            <li className="nav-item"><Link className="nav-link" to="/MenuEquipos">Equipos</Link></li>
-            <li className="nav-item"><Link className="nav-link" to="/Soporte">Soporte</Link></li>
-
-            {user && (
-              <li className="nav-item dropdown">
-                <button
-                  className="nav-link dropdown-toggle bg-transparent border-0 d-flex align-items-center"
-                  id="userDropdown"
-                  onClick={() => setShowDropdown(!showDropdown)}
-                >
-                  <i className="bi bi-person-circle fs-4"></i>
-                </button>
-                <ul className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""}`} aria-labelledby="userDropdown">
-                  <li>
-                    <button className="dropdown-item" onClick={handleLogout}>
-                      <i className="bi bi-box-arrow-right me-2"></i> Cerrar sesión
-                    </button>
-                  </li>
-                </ul>
-              </li>
-            )}
+        <div className="collapse navbar-collapse">
+          <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex gap-3">
+            <li className="nav-item">
+              <Link className="nav-link text-white fw-semibold" to="/MenuCliente">
+                <i className="bi bi-people-fill me-1"></i>Clientes
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link text-white fw-semibold" to="/MenuUsuario">
+                <i className="bi bi-person-lines-fill me-1"></i>Usuarios
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link text-white fw-semibold" to="/MenuPedido">
+                <i className="bi bi-box-seam me-1"></i>Pedidos
+              </Link>
+            </li>
+            <li className="nav-item">
+              <Link className="nav-link text-white fw-semibold" to="/MenuEquipo">
+                <i className="bi bi-hdd-network me-1"></i>Equipos
+              </Link>
+            </li>
           </ul>
         </div>
+
+        {user && (
+          <div className="dropdown ms-3">
+            <button
+              className="btn btn-outline-light dropdown-toggle d-flex align-items-center"
+              id="userDropdowm"
+              onClick={() => setShowDropdown(!showDropdown)}
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <i className="bi bi-person-circle me-2 fs-5"></i> Usuario
+            </button>
+            <ul className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : "" } mt-2 shadow`}>
+              <li>
+                <button className="dropdown-item text-danger" onClick={handleLogout}>
+                  <i className="bi bi-box-arrow-right me-2"></i>Cerrar sesión
+                </button>
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
     </nav>
   );

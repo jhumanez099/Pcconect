@@ -15,9 +15,9 @@ function EquipoRow({ equipo, onEditar, onEliminar }) {
       <td>{equipo.estado_equipo}</td>
       <td>{new Date(equipo.fecha_compra_equipo).toLocaleDateString("es-CO")}</td>
       <td>
-        <div className="d-flex flex-column align-items-center gap-2">
-          <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(equipo)}>Editar</button>
-          <button className="btn btn-danger btn-sm w-100" onClick={() => onEliminar(equipo.id_equipo)}>Eliminar</button>
+        <div className="d-flex flex-column gap-2">
+          <button className="btn btn-primary btn-sm" onClick={() => onEditar(equipo)}>Editar</button>
+          <button className="btn btn-danger btn-sm" onClick={() => onEliminar(equipo.id_equipo)}>Eliminar</button>
         </div>
       </td>
     </tr>
@@ -51,6 +51,8 @@ export default function ConsultarEquipo() {
   };
 
   const eliminarEquipo = (id) => {
+    const confirmar = window.confirm("¿Estás seguro de eliminar este equipo?");
+    if (!confirmar) return;
     Axios.delete(`http://localhost:3000/api/equipos/${id}`, { withCredentials: true })
       .then(() => {
         setEquipo((prev) => prev.filter((e) => e.id_equipo !== id));
@@ -112,15 +114,14 @@ export default function ConsultarEquipo() {
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
       <NavBar />
-      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
-        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 bg-white rounded card shadow p-4 m-4">
-          <div className="row gx-5">
-            <div className="col-12 d-flex justify-content-between align-items-center mb-3">
-              <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
-              <h1 className="text-center w-100 mb-0">Consultar equipos</h1>
-            </div>
+      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-2">
+        <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "1000px" }}>
+          <div className="mb-4 position-relative">
+            <button className="btn btn-outline-primary position-absolute start-0" onClick={() => navigate('/MenuPrincipal')}>← Menú principal</button>
+            <h1 className="text-center">Consultar Equipos</h1>
           </div>
-          <div className="input-group mb-1">
+
+          <div className="input-group mb-3">
             <span className="input-group-text">🔍︎</span>
             <input
               type="text"
@@ -130,40 +131,38 @@ export default function ConsultarEquipo() {
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
-        </div>
-      </div>
 
-      <div className="container-fluid px-3">
-        <div className="table-responsive">
-          <table className="table table-striped table-hover mt-5 shadow-lg text-center">
-            <thead className="bg-white text-dark">
-              <tr>
-                <th>Tipo</th>
-                <th>Modelo</th>
-                <th>Marca</th>
-                <th>Especificaciones</th>
-                <th>Estado</th>
-                <th>Fecha compra</th>
-                <th>Opciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {equiposFiltrados.length > 0 ? (
-                equiposFiltrados.map((e) => (
-                  <EquipoRow
-                    key={e.id_equipo}
-                    equipo={e}
-                    onEditar={openModal}
-                    onEliminar={eliminarEquipo}
-                  />
-                ))
-              ) : (
+          <div className="table-responsive">
+            <table className="table table-bordered text-center">
+              <thead className="table-light">
                 <tr>
-                  <td colSpan="7">No hay equipos registrados.</td>
+                  <th>Tipo</th>
+                  <th>Modelo</th>
+                  <th>Marca</th>
+                  <th>Especificaciones</th>
+                  <th>Estado</th>
+                  <th>Fecha compra</th>
+                  <th>Opciones</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {equiposFiltrados.length > 0 ? (
+                  equiposFiltrados.map((e) => (
+                    <EquipoRow
+                      key={e.id_equipo}
+                      equipo={e}
+                      onEditar={openModal}
+                      onEliminar={eliminarEquipo}
+                    />
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7">No hay equipos registrados.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -203,26 +202,35 @@ export default function ConsultarEquipo() {
                   </div>
                 </div>
 
-                {[
-                  { label: "Modelo", id: "modelo_equipo" },
-                  { label: "Marca", id: "marca_equipo" },
-                  { label: "Especificaciones", id: "especificaciones_equipo" },
-                  { label: "Fecha de compra", id: "fecha_compra_equipo", type: "date" },
-                ].map((field, index) => (
+                {["modelo_equipo", "marca_equipo", "especificaciones_equipo"].map((field, index) => (
                   <div className="mb-3 row align-items-center" key={index}>
-                    <label htmlFor={field.id} className="col-sm-4 col-form-label text-end">{field.label}:</label>
+                    <label htmlFor={field} className="col-sm-4 col-form-label text-end">{field.replace("_equipo", "").replace("_", " ").toUpperCase()}:</label>
                     <div className="col-sm-8">
                       <input
-                        type={field.type || "text"}
+                        type="text"
                         className="form-control"
-                        id={field.id}
-                        name={field.id}
-                        value={editingEquipo[field.id] || ""}
+                        id={field}
+                        name={field}
+                        value={editingEquipo[field] || ""}
                         onChange={handleChange}
                       />
                     </div>
                   </div>
                 ))}
+
+                <div className="mb-3 row align-items-center">
+                  <label htmlFor="fecha_compra_equipo" className="col-sm-4 col-form-label text-end">Fecha compra:</label>
+                  <div className="col-sm-8">
+                    <input
+                      type="date"
+                      className="form-control"
+                      id="fecha_compra_equipo"
+                      name="fecha_compra_equipo"
+                      value={editingEquipo.fecha_compra_equipo || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
                 <div className="mb-3 row align-items-center">
                   <label htmlFor="estado_equipo" className="col-sm-4 col-form-label text-end">Estado:</label>

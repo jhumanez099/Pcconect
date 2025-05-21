@@ -24,6 +24,9 @@ import MenuCliente from './Pages/Admin/MenuCliente';
 import MenuUsuario from './Pages/Admin/MenuUsuario';
 import MenuEquipo from './Pages/Admin/MenuEquipo';
 import MenuPedido from './Pages/Admin/MenuPedido';
+import MenuTipoUsuario from './Pages/Admin/MenuTipoUsuario';
+import MenuTipoEquipo from './Pages/Admin/MenuTipoEquipo';
+import MenuTipoPedido from './Pages/Admin/MenuTipoPedido';
 
 function App() {
   return (
@@ -40,6 +43,9 @@ function App() {
           <Route path="/MenuUsuario" element={<ProtectedRoute><MenuUsuario /></ProtectedRoute>} />
           <Route path="/MenuEquipo" element={<ProtectedRoute><MenuEquipo /></ProtectedRoute>} />
           <Route path="/MenuPedido" element={<ProtectedRoute><MenuPedido /></ProtectedRoute>} />
+          <Route path="/MenuTipoUsuario" element={<ProtectedRoute><MenuTipoUsuario /></ProtectedRoute>} />
+          <Route path="/MenuTipoEquipo" element={<ProtectedRoute><MenuTipoEquipo /></ProtectedRoute>} />
+          <Route path="/MenuTipoPedido" element={<ProtectedRoute><MenuTipoPedido /></ProtectedRoute>} />
           <Route path="/CrearCliente" element={<ProtectedRoute><CrearCliente /></ProtectedRoute>} />
           <Route path="/ConsultarCliente" element={<ProtectedRoute><ConsultarCliente /></ProtectedRoute>} />
           <Route path="/CrearTipoUsuario" element={<ProtectedRoute><CrearTipoUsuario /></ProtectedRoute>} />

@@ -74,29 +74,36 @@ const actualizarUsuario = async (req, res) => {
 
   try {
     const usuarioExistente = await Usuario.obtenerPorId(id);
-    if (!usuarioExistente || usuarioExistente.length === 0) {
+    if (!usuarioExistente) {
       return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
     }
 
     const camposModificados = {};
     Object.keys(fields).forEach((key) => {
-      if (fields[key] !== usuarioExistente[0][key]) {
+      if (fields[key] !== usuarioExistente[key]) {
         camposModificados[key] = fields[key];
       }
     });
 
+    // Si no hay cambios, no actualices
     if (Object.keys(camposModificados).length === 0) {
       return res
         .status(200)
         .json({ message: "No se realizaron cambios en el usuario." });
     }
 
-    camposModificados.contraseña_usuario = await bcrypt.hash(
-      fields.contraseña_usuario,
-      10
-    );
+    // Si la contraseña fue modificada, la encriptas
+    if (camposModificados.contraseña_usuario) {
+      camposModificados.contraseña_usuario = await bcrypt.hash(
+        fields.contraseña_usuario,
+        10
+      );
+    }
 
-    const actualizado = await Usuario.actualizar(id, camposModificados);
+    const actualizado = await Usuario.actualizar(id, {
+      ...usuarioExistente,
+      ...camposModificados,
+    });
 
     if (actualizado.affectedRows === 0) {
       return res.status(404).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
@@ -107,6 +114,7 @@ const actualizarUsuario = async (req, res) => {
     handleError(res, 500, ERROR_MESSAGES.UPDATE_ERROR, error);
   }
 };
+
 
 const eliminarUsuario = async (req, res) => {
   const id = req.params.id;

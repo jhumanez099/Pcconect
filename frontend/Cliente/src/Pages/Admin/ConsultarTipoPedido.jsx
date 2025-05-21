@@ -35,14 +35,12 @@ export default function ConsultarTipoPedido() {
 
   const obtenerTiposPedido = () => {
     Axios.get("http://localhost:3000/api/tiposPedidos", { withCredentials: true })
-      .then(res => {
-        setTiposPedido(res.data);
-        setError(null);
-      })
+      .then(res => setTiposPedido(res.data))
       .catch(() => setError("Error al cargar los tipos de pedido."));
   };
 
   const eliminarTipoPedido = (id) => {
+    if (!window.confirm("¿Está seguro de eliminar este tipo de pedido?")) return;
     Axios.delete(`http://localhost:3000/api/tiposPedidos/${id}`, { withCredentials: true })
       .then(() => {
         setTiposPedido(prev => prev.filter(t => t.id_tipo_pedido !== id));
@@ -51,14 +49,9 @@ export default function ConsultarTipoPedido() {
       .catch(err => console.error(err));
   };
 
-  const openModal = (tipo) => {
-    setEditingTipo(tipo);
-    setIsModalOpen(true);
-  };
-
   const closeModal = () => {
-    setIsModalOpen(false);
     setEditingTipo(null);
+    setIsModalOpen(false);
   };
 
   const handleChange = (e) => {
@@ -67,8 +60,7 @@ export default function ConsultarTipoPedido() {
   };
 
   const editarTipoPedido = () => {
-    Axios.put(
-      `http://localhost:3000/api/tiposPedidos/${editingTipo.id_tipo_pedido}`,
+    Axios.put(`http://localhost:3000/api/tiposPedidos/${editingTipo.id_tipo_pedido}`,
       { nombre_tipo_pedido: editingTipo.nombre_tipo_pedido },
       { withCredentials: true }
     )
@@ -80,10 +72,8 @@ export default function ConsultarTipoPedido() {
       .catch(err => console.error(err));
   };
 
-  const tiposFiltrados = useMemo(() => {
-    const texto = busqueda.toLowerCase();
-    return tiposPedido.filter(t => t.nombre_tipo_pedido.toLowerCase().includes(texto));
-  }, [busqueda, tiposPedido]);
+  const tiposFiltrados = useMemo(() =>
+    tiposPedido.filter(t => t.nombre_tipo_pedido.toLowerCase().includes(busqueda.toLowerCase())), [busqueda, tiposPedido]);
 
   useEffect(() => {
     obtenerTiposPedido();
@@ -93,13 +83,14 @@ export default function ConsultarTipoPedido() {
     <div className="min-vh-100 d-flex flex-column bg-secondary">
       <NavBar />
       <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
-        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 bg-white rounded card shadow p-4 m-4">
-          <div className="row gx-5">
-            <div className="col-12 d-flex justify-content-between align-items-center mb-3">
-              <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
-              <h1 className="text-center w-100 mb-0">Consultar tipos de pedido</h1>
-            </div>
+        <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "1000px" }}>
+          <div className="mb-4 position-relative">
+            <button className="btn btn-outline-primary position-absolute start-0" onClick={() => navigate('/MenuPrincipal')}>
+              ← Menú principal
+            </button>
+            <h1 className="text-center">Consultar tipos de pedido</h1>
           </div>
+
           <div className="input-group mb-1">
             <span className="input-group-text">🔍︎</span>
             <input
@@ -110,47 +101,34 @@ export default function ConsultarTipoPedido() {
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
+
           {error && <div className="alert alert-danger">{error}</div>}
+
+          <div className="table-responsive mt-3">
+            <table className="table table-bordered text-center">
+              <thead className="table-light">
+                <tr><th>Nombre</th><th>Opciones</th></tr>
+              </thead>
+              <tbody>
+                {tiposFiltrados.length > 0 ? (
+                  tiposFiltrados.map((tipo) => (
+                    <TipoPedidoRow
+                      key={tipo.id_tipo_pedido}
+                      tipoPedido={tipo}
+                      onEditar={(t) => { setEditingTipo(t); setIsModalOpen(true); }}
+                      onEliminar={eliminarTipoPedido}
+                    />
+                  ))
+                ) : (
+                  <tr><td colSpan="2">No hay tipos de pedido registrados.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <div className="container-fluid px-3">
-        <div className="table-responsive">
-          <table className="table table-striped table-hover mt-5 shadow-lg text-center">
-            <thead className="bg-white text-dark">
-              <tr>
-                <th>Nombre</th>
-                <th>Opciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tiposFiltrados.length > 0 ? (
-                tiposFiltrados.map((tipo) => (
-                  <TipoPedidoRow
-                    key={tipo.id_tipo_pedido}
-                    tipoPedido={tipo}
-                    onEditar={openModal}
-                    onEliminar={eliminarTipoPedido}
-                  />
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="2">No hay tipos de pedido registrados.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        contentLabel="Editar Tipo de Pedido"
-        className="custom-modal"
-        overlayClassName="custom-overlay"
-        ariaHideApp={false}
-      >
+      <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="Editar Tipo de Pedido" className="custom-modal" overlayClassName="custom-overlay" ariaHideApp={false}>
         <div className="modal-content">
           <div className="modal-header justify-content-center mb-3">
             <h5 className="modal-title text-center w-100">Editar Tipo de Pedido</h5>
@@ -160,9 +138,7 @@ export default function ConsultarTipoPedido() {
             {editingTipo && (
               <form>
                 <div className="mb-3 row align-items-center">
-                  <label htmlFor="nombre_tipo_pedido" className="col-sm-4 col-form-label text-end">
-                    Nombre:
-                  </label>
+                  <label htmlFor="nombre_tipo_pedido" className="col-sm-4 col-form-label text-end">Nombre:</label>
                   <div className="col-sm-8">
                     <input
                       type="text"
@@ -178,9 +154,7 @@ export default function ConsultarTipoPedido() {
             )}
           </div>
           <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success w-50" onClick={editarTipoPedido}>
-              Guardar Cambios
-            </button>
+            <button className="btn btn-success w-50" onClick={editarTipoPedido}>Guardar Cambios</button>
           </div>
         </div>
       </Modal>

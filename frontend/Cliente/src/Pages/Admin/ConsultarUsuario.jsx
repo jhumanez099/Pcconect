@@ -15,9 +15,9 @@ function UsuarioRow({ usuario, onEliminar, onEditar }) {
       <td>{usuario.estado_usuario}</td>
       <td>{usuario.nombre_tipo_usuario}</td>
       <td>
-        <div className="d-flex flex-column align-items-center gap-2">
-          <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(usuario)}>Editar</button>
-          <button className="btn btn-danger btn-sm w-100" onClick={() => onEliminar(usuario.id_usuario)}>Eliminar</button>
+        <div className="d-flex flex-column gap-2">
+          <button className="btn btn-primary btn-sm" onClick={() => onEditar(usuario)}>Editar</button>
+          <button className="btn btn-danger btn-sm" onClick={() => onEliminar(usuario.id_usuario)}>Eliminar</button>
         </div>
       </td>
     </tr>
@@ -52,6 +52,8 @@ export default function ConsultarUsuario() {
   };
 
   const eliminarUsuario = (id) => {
+    const confirmar = window.confirm("¿Estás seguro de eliminar este usuario?");
+    if (!confirmar) return;
     Axios.delete(`http://localhost:3000/api/usuarios/${id}`, { withCredentials: true })
       .then(() => {
         setUsuarios(prev => prev.filter(u => u.id_usuario !== id));
@@ -100,15 +102,14 @@ export default function ConsultarUsuario() {
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
       <NavBar />
-      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
-        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 bg-white rounded card shadow p-4 m-4">
-          <div className="row gx-5">
-            <div className="col-12 d-flex justify-content-between align-items-center mb-3">
-              <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
-              <h1 className="text-center w-100 mb-0">Consultar usuarios</h1>
-            </div>
+      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-2">
+        <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "1000px" }}>
+          <div className="mb-4 position-relative">
+            <button className="btn btn-outline-primary position-absolute start-0" onClick={() => navigate('/MenuPrincipal')}>← Menú principal</button>
+            <h1 className="text-center">Consultar Usuarios</h1>
           </div>
-          <div className="input-group mb-1">
+
+          <div className="input-group mb-3">
             <span className="input-group-text">🔍︎</span>
             <input
               type="text"
@@ -118,41 +119,40 @@ export default function ConsultarUsuario() {
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
-          {error && <div className="alert alert-danger">{error}</div>}
-        </div>
-      </div>
 
-      <div className="container-fluid px-3">
-        <div className="table-responsive">
-          <table className="table table-striped table-hover mt-5 shadow-lg text-center">
-            <thead className="bg-white text-dark">
-              <tr>
-                <th>Nombre</th>
-                <th>Correo</th>
-                <th>Teléfono</th>
-                <th>Cargo</th>
-                <th>Estado</th>
-                <th>Tipo</th>
-                <th>Opciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {usuariosFiltrados.length > 0 ? (
-                usuariosFiltrados.map((usuario) => (
-                  <UsuarioRow
-                    key={usuario.id_usuario}
-                    usuario={usuario}
-                    onEditar={openModal}
-                    onEliminar={eliminarUsuario}
-                  />
-                ))
-              ) : (
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          <div className="table-responsive">
+            <table className="table table-bordered text-center">
+              <thead className="table-light">
                 <tr>
-                  <td colSpan="7">No hay usuarios registrados.</td>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Teléfono</th>
+                  <th>Cargo</th>
+                  <th>Estado</th>
+                  <th>Tipo</th>
+                  <th>Opciones</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {usuariosFiltrados.length > 0 ? (
+                  usuariosFiltrados.map((usuario) => (
+                    <UsuarioRow
+                      key={usuario.id_usuario}
+                      usuario={usuario}
+                      onEditar={openModal}
+                      onEliminar={eliminarUsuario}
+                    />
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7">No hay usuarios registrados.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -172,28 +172,22 @@ export default function ConsultarUsuario() {
           <div className="modal-body">
             {editingUsuario && (
               <form>
-                {[
-                  { label: "Nombre", name: "nombre_usuario" },
-                  { label: "Correo", name: "correo_usuario", type: "email" },
-                  { label: "Teléfono", name: "telefono_usuario" },
-                  { label: "Cargo", name: "cargo_usuario" },
-                ].map((field, i) => (
+                {["nombre_usuario", "correo_usuario", "telefono_usuario", "cargo_usuario"].map((field, i) => (
                   <div className="mb-3 row align-items-center" key={i}>
-                    <label htmlFor={field.name} className="col-sm-4 col-form-label text-end">{field.label}:</label>
+                    <label htmlFor={field} className="col-sm-4 col-form-label text-end">{field.replace("_usuario", "").replace("_", " ").toUpperCase()}:</label>
                     <div className="col-sm-8">
                       <input
-                        type={field.type || "text"}
+                        type={field === "correo_usuario" ? "email" : "text"}
                         className="form-control"
-                        id={field.name}
-                        name={field.name}
-                        value={editingUsuario[field.name] || ""}
+                        id={field}
+                        name={field}
+                        value={editingUsuario?.[field] || ""}
                         onChange={handleChange}
                       />
                     </div>
                   </div>
                 ))}
 
-                {/* Estado */}
                 <div className="mb-3 row align-items-center">
                   <label htmlFor="estado_usuario" className="col-sm-4 col-form-label text-end">Estado:</label>
                   <div className="col-sm-8">
@@ -201,7 +195,7 @@ export default function ConsultarUsuario() {
                       className="form-select"
                       id="estado_usuario"
                       name="estado_usuario"
-                      value={editingUsuario.estado_usuario}
+                      value={editingUsuario?.estado_usuario || ""}
                       onChange={handleChange}
                     >
                       <option value="Activo">Activo</option>
@@ -210,7 +204,6 @@ export default function ConsultarUsuario() {
                   </div>
                 </div>
 
-                {/* Tipo de usuario */}
                 <div className="mb-3 row align-items-center">
                   <label htmlFor="id_tipo_usuario" className="col-sm-4 col-form-label text-end">Tipo:</label>
                   <div className="col-sm-8">
@@ -218,7 +211,7 @@ export default function ConsultarUsuario() {
                       className="form-select"
                       id="id_tipo_usuario"
                       name="id_tipo_usuario"
-                      value={editingUsuario.id_tipo_usuario}
+                      value={editingUsuario?.id_tipo_usuario || ""}
                       onChange={handleChange}
                     >
                       <option value="">Seleccione...</option>

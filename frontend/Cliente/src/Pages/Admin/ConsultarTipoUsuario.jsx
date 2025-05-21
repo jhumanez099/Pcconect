@@ -10,9 +10,9 @@ function TipoUsuarioRow({ tipoUsuario, onEliminar, onEditar }) {
     <tr>
       <td>{tipoUsuario.nombre_tipo_usuario}</td>
       <td>
-        <div className="d-flex flex-column align-items-center gap-2">
-          <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(tipoUsuario)}>Editar</button>
-          <button className="btn btn-danger btn-sm w-100" onClick={() => onEliminar(tipoUsuario.id_tipo_usuario)}>Eliminar</button>
+        <div className="d-flex flex-column gap-2">
+          <button className="btn btn-primary btn-sm" onClick={() => onEditar(tipoUsuario)}>Editar</button>
+          <button className="btn btn-danger btn-sm" onClick={() => onEliminar(tipoUsuario.id_tipo_usuario)}>Eliminar</button>
         </div>
       </td>
     </tr>
@@ -45,6 +45,8 @@ export default function ConsultarTipoUsuario() {
   };
 
   const eliminarTipoUsuario = (id) => {
+    const confirmar = window.confirm("¿Estás seguro de eliminar este tipo de usuario?");
+    if (!confirmar) return;
     Axios.delete(`http://localhost:3000/api/tiposUsuarios/${id}`, { withCredentials: true })
       .then(() => {
         setTiposUsuario((prev) => prev.filter((t) => t.id_tipo_usuario !== id));
@@ -92,15 +94,14 @@ export default function ConsultarTipoUsuario() {
   return (
     <div className="min-vh-100 d-flex flex-column bg-secondary">
       <NavBar />
-      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
-        <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 bg-white rounded card shadow p-4 m-4">
-          <div className="row gx-5">
-            <div className="col-12 d-flex justify-content-between align-items-center mb-3">
-              <button onClick={() => navigate("/MenuPrincipal")} className="btn btn-primary btn-sm">← Regresar</button>
-              <h1 className="text-center w-100 mb-0">Consultar tipos de usuario</h1>
-            </div>
+      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-2">
+        <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "1000px" }}>
+          <div className="mb-4 position-relative">
+            <button className="btn btn-outline-primary position-absolute start-0" onClick={() => navigate('/MenuPrincipal')}>← Menú principal</button>
+            <h1 className="text-center">Consultar Tipos de Usuario</h1>
           </div>
-          <div className="input-group mb-1">
+
+          <div className="input-group mb-3">
             <span className="input-group-text">🔍︎</span>
             <input
               type="text"
@@ -110,36 +111,35 @@ export default function ConsultarTipoUsuario() {
               onChange={(e) => setBusqueda(e.target.value)}
             />
           </div>
-          {error && <div className="alert alert-danger">{error}</div>}
-        </div>
-      </div>
 
-      <div className="container-fluid px-3">
-        <div className="table-responsive">
-          <table className="table table-striped table-hover mt-5 shadow-lg text-center">
-            <thead className="bg-white text-dark">
-              <tr>
-                <th>Nombre</th>
-                <th>Opciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tiposFiltrados.length > 0 ? (
-                tiposFiltrados.map((tipo) => (
-                  <TipoUsuarioRow
-                    key={tipo.id_tipo_usuario}
-                    tipoUsuario={tipo}
-                    onEditar={openModal}
-                    onEliminar={eliminarTipoUsuario}
-                  />
-                ))
-              ) : (
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          <div className="table-responsive">
+            <table className="table table-bordered text-center">
+              <thead className="table-light">
                 <tr>
-                  <td colSpan="2">No hay tipos de usuario registrados.</td>
+                  <th>Nombre</th>
+                  <th>Opciones</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {tiposFiltrados.length > 0 ? (
+                  tiposFiltrados.map((tipo) => (
+                    <TipoUsuarioRow
+                      key={tipo.id_tipo_usuario}
+                      tipoUsuario={tipo}
+                      onEditar={openModal}
+                      onEliminar={eliminarTipoUsuario}
+                    />
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="2">No hay tipos de usuario registrados.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -178,9 +178,7 @@ export default function ConsultarTipoUsuario() {
             )}
           </div>
           <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success " onClick={editarTipoUsuario}>
-              Guardar Cambios
-            </button>
+            <button className="btn btn-success" onClick={editarTipoUsuario}>Guardar Cambios</button>
           </div>
         </div>
       </Modal>

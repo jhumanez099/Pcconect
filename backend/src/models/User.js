@@ -60,6 +60,7 @@ const Usuario = {
     const query = `
       UPDATE usuarios
       SET 
+        id_tipo_usuario = ?, 
         nombre_usuario = ?, 
         correo_usuario = ?, 
         contraseña_usuario = ?, 
@@ -69,6 +70,7 @@ const Usuario = {
       WHERE id_usuario = ?
     `;
     const valores = [
+      fields.id_tipo_usuario,
       fields.nombre_usuario,
       fields.correo_usuario,
       fields.contraseña_usuario,
