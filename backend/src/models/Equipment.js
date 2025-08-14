@@ -22,6 +22,7 @@ const Equipo = {
       SELECT e.*, t.nombre_tipo_equipo
       FROM equipos e
       JOIN tipo_equipo t ON e.id_tipo_equipo = t.id_tipo_equipo
+      ORDER BY e.id_equipo DESC
     `;
     const [rows] = await pool.query(sql);
     return rows;

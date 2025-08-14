@@ -31,6 +31,7 @@ const Pedido = {
       JOIN clientes c ON c.id_cliente = p.id_cliente
       JOIN usuarios u ON u.id_usuario = p.id_usuario
       JOIN tipo_pedido t ON t.id_tipo_pedido = p.id_tipo_pedido
+      ORDER BY p.id_pedido DESC
     `;
     const [pedidos] = await pool.query(query);
     return pedidos;

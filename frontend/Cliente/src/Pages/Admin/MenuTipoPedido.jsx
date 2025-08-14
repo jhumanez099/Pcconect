@@ -1,33 +1,115 @@
-import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import NavBar from "../../components/Navbar";
 
 export default function MenuTipoPedido() {
   const navigate = useNavigate();
 
-  const opciones = [
-    { nombre: "Crear", ruta: "/CrearTipoPedido" },
-    { nombre: "Consultar", ruta: "/ConsultarTipoPedido" },
-  ];
+  const opciones = useMemo(
+    () => [
+      {
+        nombre: "Crear",
+        ruta: "/CrearTipoPedido",
+        icon: "bi-clipboard-plus",
+        desc: "Define un nuevo tipo de pedido y sus reglas.",
+      },
+      {
+        nombre: "Consultar",
+        ruta: "/ConsultarTipoPedido",
+        icon: "bi-clipboard-data",
+        desc: "Lista, edita o elimina tipos de pedido existentes.",
+      },
+    ],
+    []
+  );
+
+  const go = (ruta) => navigate(ruta);
+  const onKey = (e, ruta) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      navigate(ruta);
+    }
+  };
 
   return (
-    <div className="min-vh-100 d-flex flex-column">
-      <NavBar />
-      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
-        <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "600px" }}>
-          <h2 className="text-center mb-4">Menú Tipo Pedido</h2>
-          <div className="d-grid gap-3">
-            {opciones.map((opcion, index) => (
-              <button
-                key={index}
-                className="btn btn-outline-primary fw-bold text-start px-4 py-2"
-                onClick={() => navigate(opcion.ruta)}
-              >
-                {opcion.nombre}
-              </button>
+    <>
+      <style>{`
+        .liftable { transition: transform .15s ease, box-shadow .15s ease; }
+        .liftable:hover, .liftable:focus {
+          transform: translateY(-2px);
+          box-shadow: 0 .5rem 1rem rgba(0,0,0,.08);
+          outline: none;
+        }
+      `}</style>
+
+      <div className="min-vh-100 d-flex flex-column bg-light">
+        <NavBar />
+
+        <main className="container flex-grow-1 py-4">
+          <nav aria-label="breadcrumb" className="mb-3">
+            <ol className="breadcrumb mb-0">
+              <li className="breadcrumb-item">
+                <Link to="/MenuPrincipal">Menú principal</Link>
+              </li>
+              <li className="breadcrumb-item active" aria-current="page">
+                Tipo de pedido
+              </li>
+            </ol>
+          </nav>
+
+          <header className="mb-4">
+            <h1 className="h3 mb-1">Menú Tipo de Pedido</h1>
+            <p className="text-body-secondary mb-0">
+              Elige una acción para comenzar.
+            </p>
+          </header>
+
+          <section className="row row-cols-1 row-cols-md-2 g-3">
+            {opciones.map((op) => (
+              <div className="col" key={op.nombre}>
+                <div
+                  className="card h-100 shadow-sm border-0 liftable"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${op.nombre} tipo de pedido`}
+                  onClick={() => go(op.ruta)}
+                  onKeyDown={(e) => onKey(e, op.ruta)}
+                >
+                  <div className="card-body d-flex flex-column">
+                    <div className="d-flex align-items-center gap-3 mb-2">
+                      <span
+                        className="d-inline-flex align-items-center justify-content-center rounded-3 border bg-white"
+                        style={{ width: 48, height: 48 }}
+                        aria-hidden="true"
+                      >
+                        <i className={`bi ${op.icon} fs-4`} />
+                      </span>
+                      <h2 className="h5 mb-0">{op.nombre}</h2>
+                    </div>
+                    <p className="text-body-secondary mb-4">{op.desc}</p>
+                    <div className="mt-auto d-flex justify-content-end">
+                      <button
+                        className="btn btn-outline-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          go(op.ruta);
+                        }}
+                      >
+                        Abrir
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ))}
-          </div>
-        </div>
+          </section>
+
+          <p className="text-center text-body-secondary mt-4 small">
+            Tip: usa <kbd>Tab</kbd> y <kbd>Enter</kbd> para navegar con el
+            teclado.
+          </p>
+        </main>
       </div>
-    </div>
+    </>
   );
 }

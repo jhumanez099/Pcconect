@@ -10,7 +10,7 @@ const TipoPedido = {
 
   // Obtener todos los tipos de pedido
   async obtenerTodos() {
-    const sql = "SELECT * FROM tipo_pedido";
+    const sql = "SELECT * FROM tipo_pedido ORDER BY id_tipo_pedido DESC";
     const [rows] = await connection.query(sql);
     return rows;
   },

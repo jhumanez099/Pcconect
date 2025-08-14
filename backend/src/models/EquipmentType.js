@@ -13,7 +13,9 @@ const TipoEquipo = {
 
   // Obtener todos los tipos
   async obtenerTodos() {
-    const [tiposEquipos] = await pool.query("SELECT * FROM tipo_equipo");
+    const [tiposEquipos] = await pool.query(
+      "SELECT * FROM tipo_equipo ORDER BY id_tipo_equipo DESC"
+    );
     return tiposEquipos;
   },
 
