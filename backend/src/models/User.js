@@ -28,6 +28,7 @@ const Usuario = {
       SELECT u.*, t.nombre_tipo_usuario
       FROM usuarios u
       JOIN tipo_usuario t ON u.id_tipo_usuario = t.id_tipo_usuario
+      ORDER BY u.id_usuario DESC
     `;
     const [rows] = await pool.query(sql);
     return rows;

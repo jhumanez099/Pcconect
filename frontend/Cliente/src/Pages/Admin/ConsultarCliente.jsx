@@ -53,6 +53,7 @@ export default function ConsultarCliente() {
         alert("Cliente eliminado correctamente.");
       })
       .catch((err) => console.error(err));
+      alert("Hubo un problema al eliminar el cliente!!")
   };
 
   const openModal = (cliente) => {

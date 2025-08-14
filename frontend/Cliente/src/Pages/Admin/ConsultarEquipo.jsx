@@ -59,6 +59,7 @@ export default function ConsultarEquipo() {
         alert("Equipo eliminado correctamente.");
       })
       .catch((err) => console.error(err));
+      alert("Hubo un problema al eliminar el equipo!!")
   };
 
   const openModal = (equipo) => {

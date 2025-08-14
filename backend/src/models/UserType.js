@@ -8,7 +8,9 @@ const TipoUsuario = {
   },
 
   async obtenerTodos() {
-    const [rows] = await pool.query("SELECT * FROM tipo_usuario");
+    const [rows] = await pool.query(
+      "SELECT * FROM tipo_usuario ORDER BY id_tipo_usuario DESC"
+    );
     return rows;
   },
 

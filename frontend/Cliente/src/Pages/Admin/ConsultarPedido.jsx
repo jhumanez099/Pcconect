@@ -80,6 +80,7 @@ export default function ConsultarPedido() {
         alert("Pedido eliminado correctamente.");
       })
       .catch((err) => console.error(err));
+      alert("Hubo un problema al eliminar el pedido!!")
   };
   
 
@@ -118,6 +119,7 @@ export default function ConsultarPedido() {
         closeModal();
       })
       .catch((err) => console.error(err));
+      alert("Hubo un problema al editar el pedido!!")
   };
 
   useEffect(() => {
@@ -162,7 +164,7 @@ export default function ConsultarPedido() {
                   <th>Cliente</th>
                   <th>Usuario</th>
                   <th>Tipo</th>
-                  <th>Precio</th>
+                  <th>Precio Total</th>
                   <th>Estado</th>
                   <th>Motivo</th>
                   <th>Detalle</th>

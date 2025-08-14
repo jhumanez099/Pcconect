@@ -167,7 +167,7 @@ export default function CrearPedido() {
                   <tr>
                     <th>Equipo</th>
                     <th>Cant</th>
-                    <th>Precio</th>
+                    <th>Precio Unitario</th>
                     <th>Subtotal</th>
                     <th>Desde</th>
                     <th>Hasta</th>

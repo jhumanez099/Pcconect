@@ -20,7 +20,9 @@ const Cliente = {
 
   // Obtener todos los clientes
   async obtenerTodos() {
-    const [clientes] = await pool.query("SELECT * FROM clientes");
+    const [clientes] = await pool.query(
+      "SELECT * FROM clientes ORDER BY id_cliente DESC"
+    );
     return clientes;
   },
 
