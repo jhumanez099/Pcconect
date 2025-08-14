@@ -1,18 +1,33 @@
 import Axios from "axios";
+
 import NavBar from "../../components/Navbar";
+
 import Modal from "react-modal";
+
 import PropTypes from "prop-types";
+
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function TipoUsuarioRow({ tipoUsuario, onEliminar, onEditar }) {
   return (
     <tr>
       <td>{tipoUsuario.nombre_tipo_usuario}</td>
-      <td>
-        <div className="d-flex flex-column gap-2">
-          <button className="btn btn-primary btn-sm" onClick={() => onEditar(tipoUsuario)}>Editar</button>
-          <button className="btn btn-danger btn-sm" onClick={() => onEliminar(tipoUsuario.id_tipo_usuario)}>Eliminar</button>
+      <td className="text-end">
+        <div className="btn-group btn-group-sm" role="group">
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => onEditar(tipoUsuario)}
+          >
+            <i className="bi bi-pencil-square me-1" /> Editar
+          </button>
+          <button
+            className="btn btn-outline-danger"
+            onClick={() => onEliminar(tipoUsuario)}
+          >
+            <i className="bi bi-trash me-1" /> Eliminar
+          </button>
         </div>
       </td>
     </tr>
@@ -21,164 +36,368 @@ function TipoUsuarioRow({ tipoUsuario, onEliminar, onEditar }) {
 
 TipoUsuarioRow.propTypes = {
   tipoUsuario: PropTypes.object.isRequired,
+
   onEliminar: PropTypes.func.isRequired,
+
   onEditar: PropTypes.func.isRequired,
 };
 
 export default function ConsultarTipoUsuario() {
-  const [tiposUsuario, setTiposUsuario] = useState([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [editingTipo, setEditingTipo] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const obtenerTiposUsuario = () => {
-    Axios.get("http://localhost:3000/api/tiposUsuarios", { withCredentials: true })
-      .then((res) => {
-        setTiposUsuario(res.data);
-        setError(null);
-      })
-      .catch(() => {
-        setError("Error al cargar los tipos de usuario.");
+  const [tipos, setTipos] = useState([]);
+
+  const [busqueda, setBusqueda] = useState("");
+
+  const [debounced, setDebounced] = useState("");
+
+  const [editing, setEditing] = useState(null);
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const [toDelete, setToDelete] = useState(null);
+
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  const [error, setError] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+
+  const [saving, setSaving] = useState(false);
+
+  const [deleting, setDeleting] = useState(false);
+
+  const mounted = useRef(true);
+
+  const styles = `
+
+    .liftable { transition: transform .15s ease, box-shadow .15s ease; }
+
+    .liftable:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08); }
+
+    .custom-overlay { background: rgba(0,0,0,.5); }
+
+    .custom-modal { position: relative; margin: auto; max-width: 600px; outline: none; }
+
+  `;
+
+  const obtener = async () => {
+    try {
+      setLoading(true);
+
+      const res = await Axios.get("http://localhost:3000/api/tiposUsuarios", {
+        withCredentials: true,
       });
-  };
 
-  const eliminarTipoUsuario = (id) => {
-    const confirmar = window.confirm("¿Estás seguro de eliminar este tipo de usuario?");
-    if (!confirmar) return;
-    Axios.delete(`http://localhost:3000/api/tiposUsuarios/${id}`, { withCredentials: true })
-      .then(() => {
-        setTiposUsuario((prev) => prev.filter((t) => t.id_tipo_usuario !== id));
-        alert("Tipo de usuario eliminado correctamente.");
-      })
-      .catch((err) => console.error(err));
-  };
+      if (!mounted.current) return;
 
-  const openModal = (tipo) => {
-    setEditingTipo(tipo);
-    setIsModalOpen(true);
-  };
+      setTipos(res.data || []);
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingTipo(null);
+      setError(null);
+    } catch {
+      setError("Error al cargar los tipos de usuario.");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditingTipo((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const editarTipoUsuario = () => {
-    Axios.put(`http://localhost:3000/api/tiposUsuarios/${editingTipo.id_tipo_usuario}`, editingTipo, {
-      withCredentials: true,
-    })
-      .then(() => {
-        obtenerTiposUsuario();
-        alert("Tipo de usuario actualizado con éxito.");
-        closeModal();
-      })
-      .catch((err) => console.error(err));
-  };
-
-  const tiposFiltrados = useMemo(() => {
-    const texto = busqueda.toLowerCase();
-    return tiposUsuario.filter((t) => t.nombre_tipo_usuario.toLowerCase().includes(texto));
-  }, [busqueda, tiposUsuario]);
 
   useEffect(() => {
-    obtenerTiposUsuario();
+    mounted.current = true;
+
+    obtener();
+
+    return () => {
+      mounted.current = false;
+    };
   }, []);
+
+  useEffect(() => {
+    const t = setTimeout(
+      () => setDebounced(busqueda.trim().toLowerCase()),
+      250
+    );
+
+    return () => clearTimeout(t);
+  }, [busqueda]);
+
+  const filtrados = useMemo(() => {
+    if (!debounced) return tipos;
+
+    return tipos.filter((t) =>
+      (t.nombre_tipo_usuario || "").toLowerCase().includes(debounced)
+    );
+  }, [debounced, tipos]);
+
+  // editar
+
+  const openEdit = (t) => {
+    setEditing({ ...t });
+    setIsEditOpen(true);
+  };
+
+  const closeEdit = () => {
+    setIsEditOpen(false);
+    setEditing(null);
+  };
+
+  const onEditChange = (e) =>
+    setEditing((p) => ({ ...p, [e.target.name]: e.target.value }));
+
+  const guardar = async () => {
+    try {
+      setSaving(true);
+
+      await Axios.put(
+        `http://localhost:3000/api/tiposUsuarios/${editing.id_tipo_usuario}`,
+        editing,
+        { withCredentials: true }
+      );
+
+      await obtener();
+
+      closeEdit();
+    } catch (e) {
+      console.error(e);
+
+      alert("No se pudo actualizar.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // eliminar
+
+  const askDelete = (t) => {
+    setToDelete(t);
+    setIsConfirmOpen(true);
+  };
+
+  const closeConfirm = () => {
+    setToDelete(null);
+    setIsConfirmOpen(false);
+  };
+
+  const eliminar = async () => {
+    if (!toDelete) return;
+
+    try {
+      setDeleting(true);
+
+      await Axios.delete(
+        `http://localhost:3000/api/tiposUsuarios/${toDelete.id_tipo_usuario}`,
+        { withCredentials: true }
+      );
+
+      setTipos((prev) =>
+        prev.filter((x) => x.id_tipo_usuario !== toDelete.id_tipo_usuario)
+      );
+
+      closeConfirm();
+    } catch (e) {
+      console.error(e);
+
+      alert("No se pudo eliminar.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="min-vh-100 d-flex flex-column">
+      <style>{styles}</style>
       <NavBar />
-      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-2">
-        <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "1000px" }}>
-          <div className="mb-4 position-relative">
-            <button className="btn btn-outline-primary position-absolute start-0" onClick={() => navigate('/MenuPrincipal')}>← Menú principal</button>
-            <h1 className="text-center">Consultar Tipos de Usuario</h1>
-          </div>
 
-          <div className="input-group mb-3">
-            <span className="input-group-text">🔍︎</span>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Buscar tipo de usuario"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-          </div>
+      <div className="container flex-grow-1 py-4">
+        <div className="card shadow border-0 liftable">
+          <div className="card-body p-4">
+            <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
+              <div className="d-flex align-items-center gap-2">
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={() => navigate("/MenuTipoUsuario")}
+                >
+                  ← Menú Tipo Usuario
+                </button>
+                <h1 className="h4 mb-0">Consultar Tipos de Usuario</h1>
+              </div>
+              <div className="input-group" style={{ maxWidth: 420 }}>
+                <span className="input-group-text">
+                  <i className="bi bi-search" />
+                </span>
+                <input
+                  type="search"
+                  className="form-control"
+                  placeholder="Buscar tipo de usuario"
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                />
 
-          {error && <div className="alert alert-danger">{error}</div>}
-
-          <div className="table-responsive">
-            <table className="table table-bordered text-center">
-              <thead className="table-light">
-                <tr>
-                  <th>Nombre</th>
-                  <th>Opciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tiposFiltrados.length > 0 ? (
-                  tiposFiltrados.map((tipo) => (
-                    <TipoUsuarioRow
-                      key={tipo.id_tipo_usuario}
-                      tipoUsuario={tipo}
-                      onEditar={openModal}
-                      onEliminar={eliminarTipoUsuario}
-                    />
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="2">No hay tipos de usuario registrados.</td>
-                  </tr>
+                {busqueda && (
+                  <button
+                    className="btn btn-outline-secondary"
+                    onClick={() => setBusqueda("")}
+                    title="Limpiar"
+                  >
+                    <i className="bi bi-x-lg" />
+                  </button>
                 )}
-              </tbody>
-            </table>
+              </div>
+            </div>
+
+            {error && (
+              <div className="alert alert-danger d-flex align-items-center justify-content-between">
+                <span>{error}</span>
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={obtener}
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
+
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border" role="status" />
+                <p className="text-body-secondary mt-2">Cargando…</p>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Nombre</th>
+                      <th className="text-end">Opciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtrados.length > 0 ? (
+                      filtrados.map((t) => (
+                        <TipoUsuarioRow
+                          key={t.id_tipo_usuario}
+                          tipoUsuario={t}
+                          onEditar={openEdit}
+                          onEliminar={askDelete}
+                        />
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="2"
+                          className="text-center text-body-secondary py-4"
+                        >
+                          Sin resultados.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Modal editar */}
       <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        contentLabel="Editar Tipo de Usuario"
+        isOpen={isEditOpen}
+        onRequestClose={closeEdit}
         className="custom-modal"
         overlayClassName="custom-overlay"
         ariaHideApp={false}
       >
         <div className="modal-content">
-          <div className="modal-header justify-content-center mb-3">
-            <h5 className="modal-title text-center w-100">Editar Tipo de Usuario</h5>
-            <button className="btn-close position-absolute end-0 me-3" onClick={closeModal}></button>
+          <div className="modal-header">
+            <h5 className="modal-title">Editar Tipo de Usuario</h5>
+            <button type="button" className="btn-close" onClick={closeEdit} />
           </div>
           <div className="modal-body">
-            {editingTipo && (
+            {editing && (
               <form>
-                <div className="mb-3 row align-items-center">
-                  <label htmlFor="nombre_tipo_usuario" className="col-sm-4 col-form-label text-end">
-                    Nombre:
+                <div className="mb-3">
+                  <label htmlFor="nombre_tipo_usuario" className="form-label">
+                    Nombre
                   </label>
-                  <div className="col-sm-8">
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="nombre_tipo_usuario"
-                      name="nombre_tipo_usuario"
-                      value={editingTipo.nombre_tipo_usuario || ""}
-                      onChange={handleChange}
-                    />
-                  </div>
+                  <input
+                    id="nombre_tipo_usuario"
+                    name="nombre_tipo_usuario"
+                    type="text"
+                    className="form-control"
+                    value={editing.nombre_tipo_usuario || ""}
+                    onChange={onEditChange}
+                  />
                 </div>
               </form>
             )}
           </div>
-          <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success" onClick={editarTipoUsuario}>Guardar Cambios</button>
+          <div className="modal-footer">
+            <button
+              className="btn btn-outline-secondary"
+              onClick={closeEdit}
+              disabled={saving}
+            >
+              Cancelar
+            </button>
+            <button
+              className="btn btn-success"
+              onClick={guardar}
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  Guardando…
+                </>
+              ) : (
+                "Guardar cambios"
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal confirmar borrado */}
+      <Modal
+        isOpen={isConfirmOpen}
+        onRequestClose={closeConfirm}
+        className="custom-modal"
+        overlayClassName="custom-overlay"
+        ariaHideApp={false}
+      >
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">Eliminar tipo de usuario</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={closeConfirm}
+            />
+          </div>
+          <div className="modal-body">
+            ¿Eliminar <strong>{toDelete?.nombre_tipo_usuario}</strong>?
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-outline-secondary"
+              onClick={closeConfirm}
+              disabled={deleting}
+            >
+              Cancelar
+            </button>
+            <button
+              className="btn btn-danger"
+              onClick={eliminar}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2" />
+                  Eliminando…
+                </>
+              ) : (
+                "Eliminar"
+              )}
+            </button>
           </div>
         </div>
       </Modal>

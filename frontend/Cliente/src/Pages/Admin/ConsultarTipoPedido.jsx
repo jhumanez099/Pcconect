@@ -3,22 +3,25 @@ import NavBar from "../../components/Navbar";
 import Modal from "react-modal";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function TipoPedidoRow({ tipoPedido, onEliminar, onEditar }) {
   return (
     <tr>
       <td>{tipoPedido.nombre_tipo_pedido}</td>
-      <td>
-        <div className="d-flex flex-column align-items-center gap-2">
-          <button className="btn btn-primary btn-sm w-100" onClick={() => onEditar(tipoPedido)}>Editar</button>
-          <button className="btn btn-danger btn-sm w-100" onClick={() => onEliminar(tipoPedido.id_tipo_pedido)}>Eliminar</button>
+      <td className="text-end">
+        <div className="btn-group btn-group-sm" role="group">
+          <button className="btn btn-outline-primary" onClick={() => onEditar(tipoPedido)}>
+            <i className="bi bi-pencil-square me-1" /> Editar
+          </button>
+          <button className="btn btn-outline-danger" onClick={() => onEliminar(tipoPedido)}>
+            <i className="bi bi-trash me-1" /> Eliminar
+          </button>
         </div>
       </td>
     </tr>
   );
 }
-
 TipoPedidoRow.propTypes = {
   tipoPedido: PropTypes.object.isRequired,
   onEliminar: PropTypes.func.isRequired,
@@ -26,135 +29,215 @@ TipoPedidoRow.propTypes = {
 };
 
 export default function ConsultarTipoPedido() {
-  const [tiposPedido, setTiposPedido] = useState([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [editingTipo, setEditingTipo] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const obtenerTiposPedido = () => {
-    Axios.get("http://localhost:3000/api/tiposPedidos", { withCredentials: true })
-      .then(res => setTiposPedido(res.data))
-      .catch(() => setError("Error al cargar los tipos de pedido."));
-  };
+  const [tipos, setTipos] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [debounced, setDebounced] = useState("");
 
-  const eliminarTipoPedido = (id) => {
-    if (!window.confirm("¿Está seguro de eliminar este tipo de pedido?")) return;
-    Axios.delete(`http://localhost:3000/api/tiposPedidos/${id}`, { withCredentials: true })
-      .then(() => {
-        setTiposPedido(prev => prev.filter(t => t.id_tipo_pedido !== id));
-        alert("Tipo de pedido eliminado correctamente.");
-      })
-      .catch(err => console.error(err));
-  };
+  const [editing, setEditing] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const closeModal = () => {
-    setEditingTipo(null);
-    setIsModalOpen(false);
-  };
+  const [toDelete, setToDelete] = useState(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditingTipo(prev => ({ ...prev, [name]: value }));
-  };
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const mounted = useRef(true);
 
-  const editarTipoPedido = () => {
-    Axios.put(`http://localhost:3000/api/tiposPedidos/${editingTipo.id_tipo_pedido}`,
-      { nombre_tipo_pedido: editingTipo.nombre_tipo_pedido },
-      { withCredentials: true }
-    )
-      .then(() => {
-        obtenerTiposPedido();
-        alert("Tipo de pedido actualizado con éxito.");
-        closeModal();
-      })
-      .catch(err => console.error(err));
-  };
+  const styles = `
+    .liftable{transition:transform .15s ease,box-shadow .15s ease}
+    .liftable:hover{transform:translateY(-2px);box-shadow:0 .5rem 1rem rgba(0,0,0,.08)}
+    .custom-overlay{background:rgba(0,0,0,.5)}
+    .custom-modal{position:relative;margin:auto;max-width:600px;outline:none}
+  `;
 
-  const tiposFiltrados = useMemo(() =>
-    tiposPedido.filter(t => t.nombre_tipo_pedido.toLowerCase().includes(busqueda.toLowerCase())), [busqueda, tiposPedido]);
+  const obtener = async () => {
+    try {
+      setLoading(true);
+      const res = await Axios.get("http://localhost:3000/api/tiposPedidos", { withCredentials: true });
+      if (!mounted.current) return;
+      setTipos(res.data || []);
+      setError(null);
+    } catch {
+      setError("Error al cargar los tipos de pedido.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    obtenerTiposPedido();
+    mounted.current = true;
+    obtener();
+    return () => { mounted.current = false; };
   }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(busqueda.trim().toLowerCase()), 250);
+    return () => clearTimeout(t);
+  }, [busqueda]);
+
+  const filtrados = useMemo(() => {
+    if (!debounced) return tipos;
+    return tipos.filter((t) => (t.nombre_tipo_pedido || "").toLowerCase().includes(debounced));
+  }, [debounced, tipos]);
+
+  // editar
+  const openEdit = (t) => { setEditing({ ...t }); setIsEditOpen(true); };
+  const closeEdit = () => { setIsEditOpen(false); setEditing(null); };
+  const onEditChange = (e) => setEditing((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const guardar = async () => {
+    try {
+      setSaving(true);
+      await Axios.put(`http://localhost:3000/api/tiposPedidos/${editing.id_tipo_pedido}`, editing, { withCredentials: true });
+      await obtener();
+      closeEdit();
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo actualizar.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // eliminar
+  const askDelete = (t) => { setToDelete(t); setIsConfirmOpen(true); };
+  const closeConfirm = () => { setToDelete(null); setIsConfirmOpen(false); };
+  const eliminar = async () => {
+    if (!toDelete) return;
+    try {
+      setDeleting(true);
+      await Axios.delete(`http://localhost:3000/api/tiposPedidos/${toDelete.id_tipo_pedido}`, { withCredentials: true });
+      setTipos((prev) => prev.filter((x) => x.id_tipo_pedido !== toDelete.id_tipo_pedido));
+      closeConfirm();
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo eliminar.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="min-vh-100 d-flex flex-column">
+      <style>{styles}</style>
       <NavBar />
-      <div className="d-flex justify-content-center align-items-center flex-grow-1 px-3">
-        <div className="w-100 bg-white rounded card shadow p-4 m-4" style={{ maxWidth: "1000px" }}>
-          <div className="mb-4 position-relative">
-            <button className="btn btn-outline-primary position-absolute start-0" onClick={() => navigate('/MenuPrincipal')}>
-              ← Menú principal
-            </button>
-            <h1 className="text-center">Consultar tipos de pedido</h1>
-          </div>
 
-          <div className="input-group mb-1">
-            <span className="input-group-text">🔍︎</span>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Buscar por nombre"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-          </div>
+      <div className="container flex-grow-1 py-4">
+        <div className="card shadow border-0 liftable">
+          <div className="card-body p-4">
+            <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-3">
+              <div className="d-flex align-items-center gap-2">
+                <button className="btn btn-outline-secondary" onClick={() => navigate("/MenuTipoPedido")}>
+                  ← Menú Tipo Pedido
+                </button>
+                <h1 className="h4 mb-0">Consultar tipos de pedido</h1>
+              </div>
 
-          {error && <div className="alert alert-danger">{error}</div>}
-
-          <div className="table-responsive mt-3">
-            <table className="table table-bordered text-center">
-              <thead className="table-light">
-                <tr><th>Nombre</th><th>Opciones</th></tr>
-              </thead>
-              <tbody>
-                {tiposFiltrados.length > 0 ? (
-                  tiposFiltrados.map((tipo) => (
-                    <TipoPedidoRow
-                      key={tipo.id_tipo_pedido}
-                      tipoPedido={tipo}
-                      onEditar={(t) => { setEditingTipo(t); setIsModalOpen(true); }}
-                      onEliminar={eliminarTipoPedido}
-                    />
-                  ))
-                ) : (
-                  <tr><td colSpan="2">No hay tipos de pedido registrados.</td></tr>
+              <div className="input-group" style={{ maxWidth: 420 }}>
+                <span className="input-group-text"><i className="bi bi-search" /></span>
+                <input
+                  type="search"
+                  className="form-control"
+                  placeholder="Buscar por nombre"
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                />
+                {busqueda && (
+                  <button className="btn btn-outline-secondary" onClick={() => setBusqueda("")} title="Limpiar">
+                    <i className="bi bi-x-lg" />
+                  </button>
                 )}
-              </tbody>
-            </table>
+              </div>
+            </div>
+
+            {error && (
+              <div className="alert alert-danger d-flex align-items-center justify-content-between">
+                <span>{error}</span>
+                <button className="btn btn-sm btn-outline-danger" onClick={obtener}>Reintentar</button>
+              </div>
+            )}
+
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border" role="status" />
+                <p className="text-body-secondary mt-2">Cargando…</p>
+              </div>
+            ) : (
+              <div className="table-responsive mt-2">
+                <table className="table table-hover align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Nombre</th>
+                      <th className="text-end">Opciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtrados.length > 0 ? (
+                      filtrados.map((t) => (
+                        <TipoPedidoRow key={t.id_tipo_pedido} tipoPedido={t} onEditar={openEdit} onEliminar={askDelete} />
+                      ))
+                    ) : (
+                      <tr><td colSpan="2" className="text-center text-body-secondary py-4">Sin resultados.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="Editar Tipo de Pedido" className="custom-modal" overlayClassName="custom-overlay" ariaHideApp={false}>
+      {/* Modal editar */}
+      <Modal isOpen={isEditOpen} onRequestClose={closeEdit} className="custom-modal" overlayClassName="custom-overlay" ariaHideApp={false}>
         <div className="modal-content">
-          <div className="modal-header justify-content-center mb-3">
-            <h5 className="modal-title text-center w-100">Editar Tipo de Pedido</h5>
-            <button className="btn-close position-absolute end-0 me-3" onClick={closeModal}></button>
+          <div className="modal-header">
+            <h5 className="modal-title">Editar Tipo de Pedido</h5>
+            <button type="button" className="btn-close" onClick={closeEdit} />
           </div>
           <div className="modal-body">
-            {editingTipo && (
+            {editing && (
               <form>
-                <div className="mb-3 row align-items-center">
-                  <label htmlFor="nombre_tipo_pedido" className="col-sm-4 col-form-label text-end">Nombre:</label>
-                  <div className="col-sm-8">
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="nombre_tipo_pedido"
-                      name="nombre_tipo_pedido"
-                      value={editingTipo.nombre_tipo_pedido || ""}
-                      onChange={handleChange}
-                    />
-                  </div>
+                <div className="mb-3">
+                  <label htmlFor="nombre_tipo_pedido" className="form-label">Nombre</label>
+                  <input
+                    id="nombre_tipo_pedido"
+                    name="nombre_tipo_pedido"
+                    type="text"
+                    className="form-control"
+                    value={editing.nombre_tipo_pedido || ""}
+                    onChange={onEditChange}
+                  />
                 </div>
               </form>
             )}
           </div>
-          <div className="modal-footer d-flex justify-content-center">
-            <button className="btn btn-success w-50" onClick={editarTipoPedido}>Guardar Cambios</button>
+          <div className="modal-footer">
+            <button className="btn btn-outline-secondary" onClick={closeEdit} disabled={saving}>Cancelar</button>
+            <button className="btn btn-success" onClick={guardar} disabled={saving}>
+              {saving ? (<><span className="spinner-border spinner-border-sm me-2" />Guardando…</>) : "Guardar cambios"}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal confirmar borrado */}
+      <Modal isOpen={isConfirmOpen} onRequestClose={closeConfirm} className="custom-modal" overlayClassName="custom-overlay" ariaHideApp={false}>
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">Eliminar tipo de pedido</h5>
+            <button type="button" className="btn-close" onClick={closeConfirm} />
+          </div>
+          <div className="modal-body">
+            ¿Eliminar <strong>{toDelete?.nombre_tipo_pedido}</strong>?
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-outline-secondary" onClick={closeConfirm} disabled={deleting}>Cancelar</button>
+            <button className="btn btn-danger" onClick={eliminar} disabled={deleting}>
+              {deleting ? (<><span className="spinner-border spinner-border-sm me-2" />Eliminando…</>) : "Eliminar"}
+            </button>
           </div>
         </div>
       </Modal>

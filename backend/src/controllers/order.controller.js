@@ -49,18 +49,19 @@ const validateFields = (fields) =>
       // Insertar detalles
       if (Array.isArray(detalles)) {
         for (const d of detalles) {
+          const subtotal = Number(d.cantidad) * Number(d.precio_unitario);
           await Pedido.insertarDetalle({
             id_pedido,
             id_equipo: d.id_equipo,
             cantidad: d.cantidad,
             precio_unitario: d.precio_unitario,
-            subtotal: d.subtotal,
+            subtotal, // ✅ calculado aquí
             fecha_inicio: d.fecha_inicio,
-            fecha_fin: d.fecha_fin
+            fecha_fin: d.fecha_fin,
           });
         }
       }
-  
+      
       res.status(201).json({ message: "Pedido y detalle(s) creados con éxito", id_pedido });
     } catch (error) {
       console.error("Error al crear pedido:", error);
